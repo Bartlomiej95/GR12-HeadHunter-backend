@@ -3,7 +3,7 @@ import { promisify } from 'util';
 import * as crypto from 'crypto';
 
 import { safetyConfiguration } from 'config';
-import { Code } from 'src/types/user.type';
+import { Code } from 'src/types/user/user.type';
 
 const scrypter = promisify(crypto.scrypt);
 const randomByter = promisify(crypto.randomBytes);
