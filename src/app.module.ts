@@ -7,12 +7,14 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { RateLimiterConfiguration } from 'config';
 import { AuthModule } from './auth/auth.module';
+import { HrModule } from './hr/hr.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(databaseConfig as TypeOrmModule),
     ThrottlerModule.forRoot(RateLimiterConfiguration),
-    AuthModule
+    AuthModule,
+    HrModule
   ],
   controllers: [AppController],
   providers: [AppService,

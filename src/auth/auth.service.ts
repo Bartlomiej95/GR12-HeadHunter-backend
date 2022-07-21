@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { authLoginDto } from './dto/auth-login.dto';
 import { Response } from 'express';
-import { UsersEntity } from './user.entity';
+import { AdminEntity } from './admin.entity';
 import { v4 as uuid } from 'uuid';
 import { sign } from 'jsonwebtoken';
 import { JwtPayload } from './jwt.strategy';
 import { comparer, hasher } from './crypto';
-import { frontConfiguration } from 'config';
+import { frontConfiguration, safetyConfiguration } from 'config';
+import { HrEntity } from 'src/hr/hr.entity';
+import { findUser } from 'src/utils/find-user';
 
 @Injectable()
 export class AuthService {
@@ -14,24 +16,30 @@ export class AuthService {
     private createToken(currentTokneId: string): { accesToken: string, expiresIn: number } {
         const payload: JwtPayload = { id: currentTokneId };
         const expiresIn = 60 * 60 * 24;
-        const accesToken = sign(payload, 'PASSWORD tu wpisać', { expiresIn })
+        const accesToken = sign(payload, safetyConfiguration.jwtKey, { expiresIn })
         return {
             accesToken,
             expiresIn
         }
     }
 
-    private async generateToken(user: UsersEntity): Promise<string> {
+    private async generateToken(user: AdminEntity | HrEntity): Promise<string> {
         let token: string;
-        let userWithThisToken = null;
+        let AdminWithThisToken = null;
+        let HrWithTokne = null
         do {
             token = uuid();
-            userWithThisToken = await UsersEntity.findOne({
+            AdminWithThisToken = await AdminEntity.findOne({
                 where: {
                     loggedIn: token
                 }
             })
-        } while (!!userWithThisToken);
+            HrWithTokne = await HrEntity.findOne({
+                where: {
+                    loggedIn: token
+                }
+            })
+        } while (!!AdminWithThisToken && !!HrWithTokne);
         user.loggedIn = token;
         await user.save();
 
@@ -40,11 +48,7 @@ export class AuthService {
 
     async login(req: authLoginDto, res: Response): Promise<any> {
         try {
-            const user = await UsersEntity.findOne({
-                where: {
-                    email: req.email
-                }
-            })
+            const user = await findUser(req);
 
             if (!user) {
                 return res.json({
@@ -65,7 +69,7 @@ export class AuthService {
             if (!isPasswordCorrect) {
                 return res.json({
                     logedIn: false,
-                    message: 'uncorrect password',
+                    message: 'incorrect password',
                 })
             }
 
