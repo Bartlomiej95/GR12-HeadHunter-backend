@@ -1,6 +1,6 @@
 export enum ExpectedTypeWork {
   AT_LOCATION = 'atLocation',
-  CHANGE_OF_LOCATION = 'changeoflocation',
+  CHANGE_OF_LOCATION = 'changeOfLocation',
   MANUAL = 'manual',
   IRRELEVANT = 'irrelevant',
 }

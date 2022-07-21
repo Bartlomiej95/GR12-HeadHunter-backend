@@ -14,7 +14,7 @@ export const safetyConfiguration = {
 
 export const frontConfiguration = {
     domain: 'localhost',
-    registerLinkPath: 'http://localhost:3000/register/'
+    registerLinkPath: 'http://localhost:3001/register/'
 }
 
 export const emailConfiguration = {

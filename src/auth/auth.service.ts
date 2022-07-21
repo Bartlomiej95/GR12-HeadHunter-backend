@@ -47,6 +47,15 @@ export class AuthService {
     }
 
     async login(req: authLoginDto, res: Response): Promise<any> {
+
+        if (req.email == '') {
+            // Zablokuje przesyłanie pustego email i szukania tylko user po takim samym password
+            return res.json({
+                logedIn: false,
+                message: 'user not exist',
+            })
+        }
+
         try {
             const user = await findUser(req);
 
@@ -74,7 +83,6 @@ export class AuthService {
             }
 
             const token = this.createToken(await this.generateToken(user))
-
             return res.cookie('jwt', token, {
                 secure: false,
                 domain: frontConfiguration.domain,
