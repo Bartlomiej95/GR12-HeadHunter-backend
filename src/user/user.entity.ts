@@ -14,11 +14,15 @@ export class UserEntity extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  firstName: string;
+  @Column({
+    default: null
+  })
+  firstName: string | null;
 
-  @Column()
-  lastName: string;
+  @Column({
+    default: null
+  })
+  lastName: string | null;
 
   @Column()
   email: string;
