@@ -1,8 +1,10 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Role } from "src/types/user/user.type";
+import { HrEntity } from "src/hr/hr.entity";
+import { StudentEntity } from "src/student/student.entity";
 
 @Entity()
-export class AdminEntity extends BaseEntity {
+export class UserEntity extends BaseEntity {
 
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -22,18 +24,24 @@ export class AdminEntity extends BaseEntity {
     @Column({
         default: null,
     })
-    loggedIn: string | null
+    jwt: string | null
 
     @Column({
         default: false,
     })
-    activated: boolean
+    isActive: boolean
 
     @Column({
         default: null,
     })
     link: string | null;
 
+    @Column({
+        default: () => 'CURRENT_TIMESTAMP',
+    })
+    createdAt: Date
+
     @Column()
     role: Role
+
 }

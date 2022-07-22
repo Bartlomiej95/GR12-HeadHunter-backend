@@ -1,47 +1,12 @@
-import { Role } from "src/types";
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+
+import { UserEntity } from "src/auth/user.entity";
+import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class HrEntity extends BaseEntity {
 
     @PrimaryGeneratedColumn('uuid')
-    id: string;
-
-    @Column()
-    email: string;
-
-    @Column({
-        default: null
-    })
-    hash: string | null;
-
-    @Column({
-        default: null
-    })
-    salt: string | null;
-
-    @Column({
-        default: null
-    })
-    iv: string | null;
-
-    @Column({
-        default: null,
-    })
-    loggedIn: string | null
-
-    @Column({
-        default: false,
-    })
-    activated: boolean
-
-    @Column({
-        default: null,
-    })
-    link: string | null;
-
-    @Column()
-    role: Role
+    id: string
 
     @Column()
     fullName: string;
@@ -50,7 +15,16 @@ export class HrEntity extends BaseEntity {
     company: string;
 
     @Column()
-    maxReservedStudents: number
+    maxReservedStudents: number;
 
-    //tu będzie relacja one to many wybranych na rozmowę kursantów
+    @Column({
+        default: null,
+        type: 'json'
+    })
+    reservedStudents: string;
+
+    @OneToOne(() => UserEntity)
+    @JoinColumn()
+    user: UserEntity
+
 }

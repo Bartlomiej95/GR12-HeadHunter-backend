@@ -6,24 +6,30 @@ import { HrDto } from './dto/hr-add.dto';
 import { HrEntity } from './hr.entity';
 import { Role } from 'src/types';
 import { sendActivationLink } from 'src/utils/email-handler';
+import { UserEntity } from 'src/auth/user.entity';
 
 @Injectable()
 export class HrService {
 
     async addHrUser(data: HrDto): Promise<AfterAddData> {
 
-        const hr = new HrEntity();
+        const user = new UserEntity();
 
-        hr.email = data.email;
+        user.email = data.email;
+        user.link = randomSigns(safetyConfiguration.linkLength);
+        user.role = Role.recruiter
+
+        await user.save()
+
+        const hr = new HrEntity()
         hr.company = data.company;
         hr.fullName = data.fullName;
         hr.maxReservedStudents = data.maxReservedStudents;
-        hr.link = randomSigns(safetyConfiguration.linkLength);
-        hr.role = Role.recruiter
+        hr.user = user;
 
         await hr.save()
 
-        await sendActivationLink(hr.link, hr.email);
+        await sendActivationLink(user.link, user.email);
 
         return {
             actionStatus: true,

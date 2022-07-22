@@ -8,13 +8,15 @@ import { APP_GUARD } from '@nestjs/core';
 import { RateLimiterConfiguration } from 'config';
 import { AuthModule } from './auth/auth.module';
 import { HrModule } from './hr/hr.module';
+import { StudentModule } from './student/student.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(databaseConfig as TypeOrmModule),
     ThrottlerModule.forRoot(RateLimiterConfiguration),
     AuthModule,
-    HrModule
+    HrModule,
+    StudentModule
   ],
   controllers: [AppController],
   providers: [AppService,

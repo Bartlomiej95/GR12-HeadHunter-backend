@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { authLoginDto } from './dto/auth-login.dto';
 import { Response } from 'express';
-import { AdminEntity } from './admin.entity';
+import { UserEntity } from './user.entity';
 import { v4 as uuid } from 'uuid';
 import { sign } from 'jsonwebtoken';
 import { JwtPayload } from './jwt.strategy';
 import { comparer, hasher } from './crypto';
 import { frontConfiguration, safetyConfiguration } from 'config';
-import { HrEntity } from 'src/hr/hr.entity';
-import { findUser } from 'src/utils/find-user';
+
 
 @Injectable()
 export class AuthService {
@@ -23,24 +22,18 @@ export class AuthService {
         }
     }
 
-    private async generateToken(user: AdminEntity | HrEntity): Promise<string> {
+    private async generateToken(user: UserEntity): Promise<string> {
         let token: string;
-        let AdminWithThisToken = null;
-        let HrWithTokne = null
+        let UserWithThisToken = null;
         do {
             token = uuid();
-            AdminWithThisToken = await AdminEntity.findOne({
+            UserWithThisToken = await UserEntity.findOne({
                 where: {
-                    loggedIn: token
+                    jwt: token
                 }
             })
-            HrWithTokne = await HrEntity.findOne({
-                where: {
-                    loggedIn: token
-                }
-            })
-        } while (!!AdminWithThisToken && !!HrWithTokne);
-        user.loggedIn = token;
+        } while (!!UserWithThisToken);
+        user.jwt = token;
         await user.save();
 
         return token;
@@ -48,7 +41,11 @@ export class AuthService {
 
     async login(req: authLoginDto, res: Response): Promise<any> {
         try {
-            const user = await findUser(req);
+            const user = await UserEntity.findOne({
+                where: {
+                    email: req.email
+                }
+            })
 
             if (!user) {
                 return res.json({
@@ -57,7 +54,7 @@ export class AuthService {
                 })
             }
 
-            if (!user.activated) {
+            if (!user.isActive) {
                 return res.json({
                     logedIn: false,
                     message: 'account not active',

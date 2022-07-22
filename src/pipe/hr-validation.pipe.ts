@@ -1,6 +1,7 @@
 import { ArgumentMetadata, Injectable, PipeTransform, NotAcceptableException } from "@nestjs/common";
+import { UserEntity } from "src/auth/user.entity";
 import { HrDto } from "src/hr/dto/hr-add.dto";
-import { emailAvailabilityConfirm } from "src/utils/find-user";
+
 
 
 
@@ -9,9 +10,13 @@ export class NewHrUserValidation implements PipeTransform<HrDto, Promise<HrDto>>
 
     async transform(data: HrDto, metadata: ArgumentMetadata): Promise<HrDto> {
 
-        const emailAvailability = await emailAvailabilityConfirm(data.email)
+        const emailAvailability = await UserEntity.findOne({
+            where: {
+                email: data.email
+            }
+        })
 
-        if (!emailAvailability) {
+        if (emailAvailability) {
             throw new NotAcceptableException(Error, 'email already exist')
         };
 

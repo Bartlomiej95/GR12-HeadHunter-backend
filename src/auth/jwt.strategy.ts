@@ -1,10 +1,9 @@
 import { Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { UnauthorizedException, Injectable } from '@nestjs/common';
-import { AdminEntity } from './admin.entity';
+import { UserEntity } from './user.entity';
 import { safetyConfiguration } from 'config';
-import { HrEntity } from 'src/hr/hr.entity';
-import { validateUser } from 'src/utils/find-user';
+
 
 export interface JwtPayload {
     id: string;
@@ -23,12 +22,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         })
     }
 
-    async Validate(payload: JwtPayload, done: (error: UnauthorizedException | null, user: boolean | AdminEntity | HrEntity) => void) {
+    async Validate(payload: JwtPayload, done: (error: UnauthorizedException | null, user: boolean | UserEntity) => void) {
         if (!payload || !payload.id) {
             return done(new UnauthorizedException(), false)
         }
 
-        const user = await validateUser(payload.id)
+        const user = await UserEntity.findOne({
+            where: {
+                jwt: payload.id
+            }
+        })
 
         if (!user) {
             return done(new UnauthorizedException(), false)

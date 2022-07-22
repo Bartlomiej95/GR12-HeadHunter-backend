@@ -1,0 +1,27 @@
+{
+"user1":{
+    "email": "simple1@sm.com",
+    "courseCompletion": 4,
+    "courseEngagment": 3,
+    "projectDegree": 4,
+    "teamProjectDegree": 4,
+    "bonusProjectUrls": 5
+    },
+"user2":{
+    "email": "simple2@sm.com",
+    "courseCompletion": 4,
+    "courseEngagment": 2,
+    "projectDegree": 4,
+    "teamProjectDegree": 4,
+    "bonusProjectUrls": 5
+},
+"user3": {
+    "email": "simple3@sm.com",
+    "courseCompletion": 4,
+    "courseEngagment": 4,
+    "projectDegree": 4,
+    "teamProjectDegree": 5,
+    "bonusProjectUrls": 5
+}
+}
+
