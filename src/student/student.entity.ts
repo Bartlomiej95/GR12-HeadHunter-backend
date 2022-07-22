@@ -2,9 +2,11 @@ import {
   BaseEntity,
   Column,
   Entity,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ExpectedContractType, ExpectedTypeWork } from '../types';
+import { UserEntity } from '../user/user.entity';
 
 @Entity()
 export class StudentEntity extends BaseEntity {
@@ -115,4 +117,7 @@ export class StudentEntity extends BaseEntity {
     type: 'longtext'
   })
   courses: string | null;                 //like above
+
+  @OneToOne(type => UserEntity)
+  user: UserEntity;
 }

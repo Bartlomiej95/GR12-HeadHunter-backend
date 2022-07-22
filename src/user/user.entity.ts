@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Role } from '../types';
 import { HrEntity } from '../hr/hr.entity';
+import { StudentEntity } from '../student/student.entity';
 
 @Entity()
 export class UserEntity extends BaseEntity {
@@ -62,4 +63,8 @@ export class UserEntity extends BaseEntity {
   @OneToOne(type => HrEntity)
   @JoinColumn()
   hr: HrEntity;
+
+  @OneToOne(type => StudentEntity)
+  @JoinColumn()
+  student: StudentEntity;
 }
