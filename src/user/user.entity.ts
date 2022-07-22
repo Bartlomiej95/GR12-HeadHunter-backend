@@ -1,5 +1,13 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  JoinColumn
+} from 'typeorm';
 import { Role } from '../types';
+import { HrEntity } from '../hr/hr.entity';
 
 @Entity()
 export class UserEntity extends BaseEntity {
@@ -46,4 +54,8 @@ export class UserEntity extends BaseEntity {
 
   @Column()
   role: Role;
+
+  @OneToOne(type => HrEntity)
+  @JoinColumn()
+  hr: HrEntity;
 }

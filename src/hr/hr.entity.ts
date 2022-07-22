@@ -1,4 +1,11 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  OneToOne,
+  PrimaryGeneratedColumn
+} from 'typeorm';
+import { UserEntity } from '../user/user.entity';
 
 @Entity()
 export class HrEntity extends BaseEntity {
@@ -7,11 +14,14 @@ export class HrEntity extends BaseEntity {
   id: string;
 
   // @Column()
-  // fullName: string;  //przeniesione do UserEntity jako firstName i lastName
+  // fullName: string;  //moved into UserEntity as firstName and lastName
 
   @Column()
   company: string;
 
   @Column()
   maxReservedStudents: number;
+
+  @OneToOne(type => UserEntity)
+  user: UserEntity;
 }
