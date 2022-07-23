@@ -1,12 +1,13 @@
 import {
   BaseEntity,
   Column,
-  Entity,
+  Entity, ManyToOne, OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ExpectedContractType, ExpectedTypeWork, StudentStatus } from '../types';
 import { UserEntity } from '../user/user.entity';
+import { HrEntity } from '../hr/hr.entity';
 
 @Entity()
 export class StudentEntity extends BaseEntity {
@@ -118,11 +119,17 @@ export class StudentEntity extends BaseEntity {
   })
   courses: string | null;                 //like above
 
-  @OneToOne(type => UserEntity)
-  user: UserEntity;
-
   @Column({
     default: null
   })
   status: StudentStatus | null;
+
+  @OneToOne(type => UserEntity)
+  user: UserEntity;
+
+  @ManyToOne(
+    type => HrEntity,
+    entity => entity.checkedStudents,
+  )
+  checkedByHr: HrEntity;
 }

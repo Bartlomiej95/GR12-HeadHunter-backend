@@ -1,11 +1,12 @@
 import {
   BaseEntity,
   Column,
-  Entity,
+  Entity, OneToMany,
   OneToOne,
-  PrimaryGeneratedColumn
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { UserEntity } from '../user/user.entity';
+import { StudentEntity } from '../student/student.entity';
 
 @Entity()
 export class HrEntity extends BaseEntity {
@@ -24,4 +25,10 @@ export class HrEntity extends BaseEntity {
 
   @OneToOne(type => UserEntity)
   user: UserEntity;
+
+  @OneToMany(
+    type => StudentEntity,
+    entity => entity.checkedByHr,
+  )
+  checkedStudents: StudentEntity[];
 }
