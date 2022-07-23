@@ -11,6 +11,7 @@ import { ExpectedContractType, ExpectedTypeWork, StudentStatus } from '../types'
 import { UserEntity } from '../user/user.entity';
 import { HrEntity } from '../hr/hr.entity';
 import { BonusProjectUrlEntity } from './bonus-project-url.entity';
+import { PortfolioUrlEntity } from './portfolio-url.entity';
 
 @Entity()
 export class StudentEntity extends BaseEntity {
@@ -29,7 +30,7 @@ export class StudentEntity extends BaseEntity {
   @Column()
   teamProjectDegree: number;
 
-  // //move end of class - relation 1-oo
+  // //move to end of class - relation 1-oo
   // @Column()
   // bonusProjectUrls: string;   //here should be array[]
   //                             //project from stage 9 (bonus stage)
@@ -55,11 +56,12 @@ export class StudentEntity extends BaseEntity {
   })
   githubUsername: string | null;
 
-  @Column({
-    default: null,
-    type: 'json'
-  })
-  portfolioUrls: string | null;   //here should be array[], can be [empty]
+  // //move to end of class - relation 1-oo
+  // @Column({
+  //   default: null,
+  //   type: 'json'
+  // })
+  // portfolioUrls: string | null;   //here should be array[], can be [empty]
 
   @Column({
     type: 'json',
@@ -142,4 +144,10 @@ export class StudentEntity extends BaseEntity {
     entity => entity.student,
   )
   bonusProjectUrls: BonusProjectUrlEntity[];
+
+  @OneToMany(
+    type => PortfolioUrlEntity,
+    entity => entity.student,
+  )
+  portfolioUrls: PortfolioUrlEntity[];
 }
