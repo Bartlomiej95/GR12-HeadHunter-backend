@@ -12,6 +12,7 @@ import { UserEntity } from '../user/user.entity';
 import { HrEntity } from '../hr/hr.entity';
 import { BonusProjectUrlEntity } from './bonus-project-url.entity';
 import { PortfolioUrlEntity } from './portfolio-url.entity';
+import { ProjectUrlEntity } from './project-url.entity';
 
 @Entity()
 export class StudentEntity extends BaseEntity {
@@ -63,12 +64,13 @@ export class StudentEntity extends BaseEntity {
   // })
   // portfolioUrls: string | null;   //here should be array[], can be [empty]
 
-  @Column({
-    type: 'json',
-    default: null
-  })
-  projectUrls: string | null;     //here should be array[]
-                                  //project from stage 8 (to pass into stage 9)
+  // //move to end of class - relation 1-oo
+  // @Column({
+  //   type: 'json',
+  //   default: null
+  // })
+  // projectUrls: string | null;     //here should be array[]
+  //                                 //project from stage 8 (to pass into stage 9)
 
   @Column({
     default: null
@@ -150,4 +152,10 @@ export class StudentEntity extends BaseEntity {
     entity => entity.student,
   )
   portfolioUrls: PortfolioUrlEntity[];
+
+  @OneToMany(
+    type => ProjectUrlEntity,
+    entity => entity.student,
+  )
+  projectUrls: ProjectUrlEntity[];
 }
