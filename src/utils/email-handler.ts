@@ -11,7 +11,7 @@ const transporter = createTransport({
     }
 })
 
-export const sendActivationLink = async (link: string, userMail: string): Promise<void> => {
+export const sendActivationLink = async (link: string, role: string, userMail: string): Promise<void> => {
 
     const mail = {
         from: emailConfiguration.mailCli,
@@ -20,7 +20,7 @@ export const sendActivationLink = async (link: string, userMail: string): Promis
         text: `Twoje konto zostało dodane do aplikacji Head_hunt przez administratora, w celu aktywacji konta oraz rejestracji
         prosimy kilknąć w link poniżej
 
-        link: ${frontConfiguration.registerLinkPath}/${link}`
+        link: ${frontConfiguration.registerLinkPath}${role}/${link}`
     };
 
     try {

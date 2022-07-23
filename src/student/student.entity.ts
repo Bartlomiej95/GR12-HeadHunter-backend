@@ -1,7 +1,10 @@
 
 import { UserEntity } from "src/auth/user.entity";
+import { HrEntity } from "src/hr/hr.entity";
+import { rating } from "src/types";
 import { ExpectedContractType, ExpectedTypeWork } from "src/types/user/user.register.type";
-import { BaseEntity, Column, Entity, JoinTable, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { UserStatus } from "src/types/user/user.status";
+import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class StudentEntity extends BaseEntity {
@@ -10,18 +13,20 @@ export class StudentEntity extends BaseEntity {
     id: string;
 
     @Column()
-    courseCompletion: number;
+    courseCompletion: rating;
 
     @Column()
-    courseEngagment: number;
+    courseEngagment: rating;
 
     @Column()
-    projectDegree: number;
+    projectDegree: rating;
 
     @Column()
-    teamProjectDegree: number;
+    teamProjectDegree: rating;
 
-    @Column()
+    @Column({
+        type: 'longtext'
+    })
     bonusProjectUrls: string;
 
     @Column({
@@ -109,8 +114,16 @@ export class StudentEntity extends BaseEntity {
     })
     courses: string | null;
 
+    @Column({
+        default: UserStatus.AVAILABLE
+    })
+    reservationStatus: UserStatus
+
+    @ManyToOne(() => HrEntity, (hr) => hr.reservedStudents)
+    hr: HrEntity | null;
+
     @OneToOne(() => UserEntity)
-    @JoinTable()
+    @JoinColumn()
     user: UserEntity;
 
 }

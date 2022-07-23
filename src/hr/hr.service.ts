@@ -29,11 +29,11 @@ export class HrService {
 
         await hr.save()
 
-        await sendActivationLink(user.link, user.email);
+        await sendActivationLink(user.link, 'recruiter', user.email);
 
         return {
             actionStatus: true,
-            message: 'hr user added',
+            message: 'Rekruter dodany',
         }
     }
 }

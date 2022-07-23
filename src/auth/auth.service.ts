@@ -7,6 +7,8 @@ import { sign } from 'jsonwebtoken';
 import { JwtPayload } from './jwt.strategy';
 import { comparer, hasher } from './crypto';
 import { frontConfiguration, safetyConfiguration } from 'config';
+import { RegistrationData } from './dto/registration.dto';
+import { randomSigns } from 'src/utils/random-signs';
 
 
 @Injectable()
@@ -50,14 +52,14 @@ export class AuthService {
             if (!user) {
                 return res.json({
                     logedIn: false,
-                    message: 'user not exist',
+                    message: 'Użytkownik o podanej nazwie nie istnieje',
                 })
             }
 
             if (!user.isActive) {
                 return res.json({
                     logedIn: false,
-                    message: 'account not active',
+                    message: 'Konto nie jest jeszcze aktywne',
                 })
             }
 
@@ -66,7 +68,7 @@ export class AuthService {
             if (!isPasswordCorrect) {
                 return res.json({
                     logedIn: false,
-                    message: 'incorrect password',
+                    message: 'Niepoprawne hasło',
                 })
             }
 
@@ -85,6 +87,62 @@ export class AuthService {
             res
                 .status(500)
                 .json({ error: err.message })
+        }
+    }
+
+    async register(data: RegistrationData, res: Response): Promise<any> {
+        try {
+            const result = await UserEntity.findOne({
+                where: {
+                    email: data.email
+                }
+            })
+
+            if (!result) {
+                return res.json({
+                    actionStatus: false,
+                    message: 'Użytkownik o podanym adresie email nie istnieje',
+                })
+            }
+
+            if (result.link !== data.urlCode) {
+                return res.json({
+                    actionStatus: false,
+                    message: 'niepoprawny kod aktywacyjny',
+                })
+            }
+
+            if (data.password.length < 8) {
+                return res.json({
+                    actionStatus: false,
+                    message: 'Hasło jest za krótkie',
+                })
+            }
+
+            result.link = null;
+            result.isActive = true;
+
+            const salt = randomSigns(safetyConfiguration.saltLength)
+            const code = await hasher(data.password, salt);
+
+            result.salt = salt;
+            result.hash = code.coded;
+            result.iv = code.iv;
+
+            await result.save();
+
+            res.json({
+                actionStatus: true,
+                message: 'Konto zostało aktywowane',
+            })
+        } catch (err) {
+            console.log(err)
+            res
+                .status(500)
+                .json({
+                    actionStatus: false,
+                    message: 'Błąd serwera',
+                })
         }
     }
 }

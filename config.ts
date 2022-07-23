@@ -22,3 +22,8 @@ export const emailConfiguration = {
     mailPass: 'ptymfpoaqpruhtae',
     mailService: 'gmail',
 }
+
+export const fileConfiguration = {
+    acceptableFileType: 'application/json',
+    maxFileSize: 100000
+}

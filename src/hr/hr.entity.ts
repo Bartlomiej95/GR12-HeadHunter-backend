@@ -1,6 +1,7 @@
 
 import { UserEntity } from "src/auth/user.entity";
-import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { StudentEntity } from "src/student/student.entity";
+import { BaseEntity, Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class HrEntity extends BaseEntity {
@@ -17,11 +18,8 @@ export class HrEntity extends BaseEntity {
     @Column()
     maxReservedStudents: number;
 
-    @Column({
-        default: null,
-        type: 'json'
-    })
-    reservedStudents: string;
+    @OneToMany(() => StudentEntity, (student) => student.hr)
+    reservedStudents: StudentEntity;
 
     @OneToOne(() => UserEntity)
     @JoinColumn()
