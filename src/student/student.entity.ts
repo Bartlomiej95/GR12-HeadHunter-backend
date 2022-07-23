@@ -5,7 +5,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { ExpectedContractType, ExpectedTypeWork } from '../types';
+import { ExpectedContractType, ExpectedTypeWork, StudentStatus } from '../types';
 import { UserEntity } from '../user/user.entity';
 
 @Entity()
@@ -120,4 +120,9 @@ export class StudentEntity extends BaseEntity {
 
   @OneToOne(type => UserEntity)
   user: UserEntity;
+
+  @Column({
+    default: null
+  })
+  status: StudentStatus | null;
 }

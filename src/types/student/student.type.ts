@@ -11,3 +11,9 @@ export enum ExpectedContractType {
   UZ_UoD = 'UZ/UoD',
   IRRELEVANT = 'irrelevant',
 }
+
+export enum StudentStatus {
+  AVAILABLE = 'available',
+  DURING = 'during',
+  HIRED = 'hired',
+}
