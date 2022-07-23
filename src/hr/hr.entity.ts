@@ -20,7 +20,11 @@ export class HrEntity extends BaseEntity {
   @Column()
   company: string;
 
-  @Column()
+  @Column({
+    default: 1,
+    type: 'int',
+    precision: 3,
+  })
   maxReservedStudents: number;
 
   @OneToOne(type => UserEntity)

@@ -16,12 +16,14 @@ export class UserEntity extends BaseEntity {
   id: string;
 
   @Column({
-    default: null
+    default: null,
+    length: 50,
   })
   firstName: string | null;
 
   @Column({
-    default: null
+    default: null,
+    length: 50,
   })
   lastName: string | null;
 
@@ -57,7 +59,9 @@ export class UserEntity extends BaseEntity {
   })
   createdAt: Date;
 
-  @Column()
+  @Column({
+    length: 10
+  })
   role: Role;
 
   @OneToOne(type => HrEntity)

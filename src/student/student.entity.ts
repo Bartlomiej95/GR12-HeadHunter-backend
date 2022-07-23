@@ -19,16 +19,28 @@ export class StudentEntity extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({
+    type: 'int',
+    precision: 1,
+  })
   courseCompletion: number;
 
-  @Column()
+  @Column({
+    type: 'int',
+    precision: 1,
+  })
   courseEngagment: number;
 
-  @Column()
+  @Column({
+    type: 'int',
+    precision: 1,
+  })
   projectDegree: number;
 
-  @Column()
+  @Column({
+    type: 'int',
+    precision: 1,
+  })
   teamProjectDegree: number;
 
   // //move to end of class - relation 1-oo
@@ -37,7 +49,9 @@ export class StudentEntity extends BaseEntity {
   //                             //project from stage 9 (bonus stage)
 
   @Column({
-    default: null
+    default: null,
+    type: 'int',
+    precision: 11,
   })
   tel: number | null;
 
@@ -73,7 +87,8 @@ export class StudentEntity extends BaseEntity {
   //                                 //project from stage 8 (to pass into stage 9)
 
   @Column({
-    default: null
+    default: null,
+    length: 5000,
   })
   bio: string | null;
 
@@ -93,39 +108,40 @@ export class StudentEntity extends BaseEntity {
   expectedContractType: ExpectedContractType | null;
 
   @Column({
-    default: null
+    default: null,
+    length: 7,
   })
   expectedSalary: string | null;
 
   @Column({
-    default: null                         //not false
+    default: null,
   })
-  canTakeApprenticeship: boolean | null;  //if false without null
+  canTakeApprenticeship: boolean | null;
 
   @Column({
-    default: null                         //not 0
+    default: null,
+    type: 'int',
+    precision: 3
   })
-  monthsOfCommercialExp: number | null;   //if 0 without null
-
-  @Column({
-    default: null,                        //not ''
-    type: 'longtext'
-  })
-  education: string | null;               //if '' maybe without null
-                                          //but this is longtext outside DB table
-                                          //null can be effectively
+  monthsOfCommercialExp: number | null;
 
   @Column({
     default: null,
     type: 'longtext'
   })
-  workExperience: string | null;          //like above
+  education: string | null;
 
   @Column({
     default: null,
     type: 'longtext'
   })
-  courses: string | null;                 //like above
+  workExperience: string | null;
+
+  @Column({
+    default: null,
+    type: 'longtext'
+  })
+  courses: string | null;
 
   @Column({
     default: null
