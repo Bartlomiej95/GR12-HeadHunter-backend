@@ -1,13 +1,16 @@
 import {
   BaseEntity,
   Column,
-  Entity, ManyToOne, OneToMany,
+  Entity,
+  ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ExpectedContractType, ExpectedTypeWork, StudentStatus } from '../types';
 import { UserEntity } from '../user/user.entity';
 import { HrEntity } from '../hr/hr.entity';
+import { BonusProjectUrlEntity } from './bonus-project-url.entity';
 
 @Entity()
 export class StudentEntity extends BaseEntity {
@@ -26,9 +29,10 @@ export class StudentEntity extends BaseEntity {
   @Column()
   teamProjectDegree: number;
 
-  @Column()
-  bonusProjectUrls: string;   //here should be array[]
-                              //project from stage 9 (bonus stage)
+  // //move end of class - relation 1-oo
+  // @Column()
+  // bonusProjectUrls: string;   //here should be array[]
+  //                             //project from stage 9 (bonus stage)
 
   @Column({
     default: null
@@ -132,4 +136,10 @@ export class StudentEntity extends BaseEntity {
     entity => entity.checkedStudents,
   )
   checkedByHr: HrEntity;
+
+  @OneToMany(
+    type => BonusProjectUrlEntity,
+    entity => entity.student,
+  )
+  bonusProjectUrls: BonusProjectUrlEntity[];
 }
