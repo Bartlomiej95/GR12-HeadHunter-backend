@@ -9,7 +9,8 @@ export const safetyConfiguration = {
     algorithm: 'aes-192-cbc',
     iterations: 24,
     saltLength: 30,
-    linkLength: 30
+    linkLength: 30,
+    cookieExpires: 60 * 60 * 24,
 }
 
 export const frontConfiguration = {

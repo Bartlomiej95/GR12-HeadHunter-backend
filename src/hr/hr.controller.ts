@@ -1,10 +1,12 @@
-import { Body, Controller, Inject, Post, UseFilters, UseGuards, UsePipes } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { Body, Controller, Get, Inject, Param, Post, UseFilters, UseGuards, UsePipes } from '@nestjs/common';
+import { AuthGuard } from 'src/guards/Auth.guard';
 import { AcceptableExceptionFilter } from 'src/filter/not-acceptable.filter';
 import { NewHrUserValidation } from 'src/pipe/hr-validation.pipe';
 import { AfterAddData } from 'src/types';
 import { HrDto } from './dto/hr-add.dto';
 import { HrService } from './hr.service';
+import { UserObject } from 'src/decorators/user-object.decorator';
+import { UserEntity } from 'src/auth/user.entity';
 
 @Controller('recruiter')
 export class HrController {
@@ -14,7 +16,7 @@ export class HrController {
 
 
     @Post('/add')
-    //@UseGuards(AuthGuard('jwt')) ścieżka będzie autoryzowana dla admina narazie do testów nie musi być 
+    //@UseGuards(AuthGuard()) ścieżka będzie autoryzowana dla admina narazie do testów nie musi być 
     @UsePipes(NewHrUserValidation)
     @UseFilters(new AcceptableExceptionFilter())
     async addRecruiterAccount(
@@ -30,6 +32,15 @@ export class HrController {
                 message: err.message
             }
         }
+    }
+
+    @Get('/addstudent/:id')
+    @UseGuards(AuthGuard)
+    async addStudentToList(
+        @UserObject() user: UserEntity,
+        @Param('id') id: string
+    ) {
+        return await this.hrService.AddStudentToList(user, id);
     }
 
 }

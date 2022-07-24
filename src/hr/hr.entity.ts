@@ -19,7 +19,7 @@ export class HrEntity extends BaseEntity {
     maxReservedStudents: number;
 
     @OneToMany(() => StudentEntity, (student) => student.hr)
-    reservedStudents: StudentEntity;
+    reservedStudents: StudentEntity[];
 
     @OneToOne(() => UserEntity)
     @JoinColumn()

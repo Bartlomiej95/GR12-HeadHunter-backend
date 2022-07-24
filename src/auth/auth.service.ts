@@ -4,19 +4,23 @@ import { Response } from 'express';
 import { UserEntity } from './user.entity';
 import { v4 as uuid } from 'uuid';
 import { sign } from 'jsonwebtoken';
-import { JwtPayload } from './jwt.strategy';
 import { comparer, hasher } from './crypto';
 import { frontConfiguration, safetyConfiguration } from 'config';
 import { RegistrationData } from './dto/registration.dto';
 import { randomSigns } from 'src/utils/random-signs';
+import { PassChange } from './dto/pass-change.dto';
+import { UserResponse } from 'src/types';
 
+interface JwtPayload {
+    id: string
+}
 
 @Injectable()
 export class AuthService {
 
     private createToken(currentTokneId: string): { accesToken: string, expiresIn: number } {
         const payload: JwtPayload = { id: currentTokneId };
-        const expiresIn = 60 * 60 * 24;
+        const expiresIn = safetyConfiguration.cookieExpires;
         const accesToken = sign(payload, safetyConfiguration.jwtKey, { expiresIn })
         return {
             accesToken,
@@ -143,6 +147,68 @@ export class AuthService {
                     actionStatus: false,
                     message: 'Błąd serwera',
                 })
+        }
+    }
+
+    async logout(user: UserEntity, res: Response): Promise<any> {
+
+        try {
+            user.jwt = null;
+            await user.save();
+
+            res
+                .cookie('jwt', '')
+                .json({
+                    actionStatus: true,
+                    message: 'wylogowano poprawnie'
+                })
+        } catch (err) {
+            console.log(err)
+            res
+                .status(500)
+                .json({
+                    actionStatus: false,
+                    message: 'błąd serwera'
+                })
+        }
+    }
+
+    async passwordChanging(user: UserEntity, data: PassChange, res: Response): Promise<UserResponse> {
+
+        try {
+            const passValidation = await comparer(data.oldPassword, user.hash, user.iv, user.salt);
+
+            if (!passValidation) {
+                return {
+                    actionStatus: false,
+                    message: 'Niepoprawne hasło'
+                }
+            }
+
+            if (data.newPassword.length < 8) {
+                return {
+                    actionStatus: false,
+                    message: 'Nowe hasło jest za krótkie'
+                }
+            }
+
+            const newSalt = randomSigns(safetyConfiguration.saltLength);
+            const newPass = await hasher(data.newPassword, newSalt);
+
+            user.hash = newPass.coded;
+            user.iv = newPass.iv;
+            user.salt = newSalt;
+
+            await user.save();
+
+            this.logout(user, res);
+
+        } catch (err) {
+            console.log(err)
+            return {
+                actionStatus: false,
+                message: 'błąd serwera'
+            }
         }
     }
 }

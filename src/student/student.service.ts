@@ -9,6 +9,7 @@ import { UserEntity } from 'src/auth/user.entity';
 import { randomSigns } from 'src/utils/random-signs';
 import { safetyConfiguration } from 'config';
 import { sendActivationLink } from 'src/utils/email-handler';
+import { UserStatus } from 'src/types/user/user.status';
 
 
 @Injectable()
@@ -51,4 +52,21 @@ export class StudentService {
 
         return true;
     }
+
+    async getFreeStudnetList() {
+        const result = await StudentEntity.find({
+            where: {
+                reservationStatus: UserStatus.AVAILABLE
+            },
+            relations: {
+                user: true,
+            }
+        })
+
+        const activeStudent = result.filter(student => student.user.isActive === true);
+        const toSend = activeStudent.map(student => ({ ...student, user: 'active' }))
+
+        return toSend;
+    }
+
 }

@@ -1,4 +1,4 @@
-import { Controller, Inject, Post, UploadedFile, UploadedFiles, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Inject, Post, UploadedFile, UploadedFiles, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { destionation } from 'src/multer/multer.storage';
@@ -45,6 +45,23 @@ export class StudentController {
             return {
                 actionStatus: false,
                 message: `Błąd w trakcie importu kursantów`,
+            }
+        }
+    }
+
+    @Get('/freelist')
+    async getFreeStudents() {
+        try {
+            const result = await this.studentService.getFreeStudnetList();
+            return {
+                actionStatus: true,
+                data: result
+            }
+        } catch (err) {
+            console.log(err)
+            return {
+                actionStatus: false,
+                data: null
             }
         }
     }
