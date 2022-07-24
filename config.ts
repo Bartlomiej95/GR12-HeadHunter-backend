@@ -9,9 +9,22 @@ export const safetyConfiguration = {
     algorithm: 'aes-192-cbc',
     iterations: 24,
     saltLength: 30,
-    linkLength: 30
+    linkLength: 30,
+    cookieExpires: 60 * 60 * 24,
 }
 
 export const frontConfiguration = {
     domain: 'localhost',
+    registerLinkPath: 'http://localhost:3000/register/'
+}
+
+export const emailConfiguration = {
+    mailCli: 'applicationheadhunterproject@gmail.com',
+    mailPass: 'ptymfpoaqpruhtae',
+    mailService: 'gmail',
+}
+
+export const fileConfiguration = {
+    acceptableFileType: 'application/json',
+    maxFileSize: 100000
 }

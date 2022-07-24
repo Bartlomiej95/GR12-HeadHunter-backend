@@ -1,0 +1,27 @@
+
+    [{
+    "email": "simple1@sm.com",
+    "courseCompletion": 4,
+    "courseEngagment": 3,
+    "projectDegree": 4,
+    "teamProjectDegree": 4,
+    "bonusProjectUrls": ["url do github", "url do github"]
+    },
+    {
+    "email": "simple2@sm.com",
+    "courseCompletion": 4,
+    "courseEngagment": 2,
+    "projectDegree": 4,
+    "teamProjectDegree": 4,
+    "bonusProjectUrls": ["url do github", "url do github"]
+    },
+    {
+    "email": "developerdariusz@gmail.com",
+    "courseCompletion": 4,
+    "courseEngagment": 4,
+    "projectDegree": 4,
+    "teamProjectDegree": 5,
+    "bonusProjectUrls": ["url do github", "url do github"]
+}]
+
+
