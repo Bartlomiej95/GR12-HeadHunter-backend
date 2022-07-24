@@ -4,10 +4,10 @@ import {
   Entity, ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { StudentEntity } from './student.entity';
+import { StudentEntity } from '../db_proposed_structure/src/student/student.entity';
 
 @Entity()
-export class BonusProjectUrlEntity extends BaseEntity {
+export class PortfolioUrlEntity extends BaseEntity {
 
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -19,7 +19,7 @@ export class BonusProjectUrlEntity extends BaseEntity {
 
   @ManyToOne(
     type => StudentEntity,
-    entity => entity.bonusProjectUrls,
+    entity => entity.portfolioUrls,
   )
   student: StudentEntity;
 }
