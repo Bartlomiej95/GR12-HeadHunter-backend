@@ -69,7 +69,7 @@ export class StudentService {
         return toSend;
     }
 
-    async changeStatus(id: string, status: UserStatus) {
+    async changeStatus(id: string, status: UserStatus): Promise<string> {
         const student = await StudentEntity.findOneOrFail({
             relations: ['user'],
             where: {
@@ -79,8 +79,10 @@ export class StudentService {
 
         switch (status) {
             case UserStatus.AVAILABLE:
+                //recruiter does it
                 break;
             case UserStatus.DURING:
+                //recruiter does it
                 break;
             case UserStatus.HIRED:
                 student.reservationStatus = UserStatus.HIRED;
