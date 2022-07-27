@@ -2,6 +2,7 @@ import { Controller,
     Get,
     Inject,
     Param,
+    Patch,
     Post,
     UploadedFile,
     UploadedFiles,
@@ -12,7 +13,7 @@ import { Controller,
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { destionation } from 'src/multer/multer.storage';
-import { UploadeFileMulter } from 'src/types';
+import {ChangeStudentStatusResponse, UploadeFileMulter } from 'src/types';
 import { FileTypeValidationPipe } from 'src/pipe/file-validation.pipe';
 import { AcceptableExceptionFilter } from 'src/filter/not-acceptable.filter';
 import { StudentService } from './student.service';
@@ -77,11 +78,11 @@ export class StudentController {
         }
     }
 
-    @Post('/:id/:status')
+    @Patch('/:id/:status')
     async changeStatus(
         @Param('id') id: string,
         @Param('status') status: UserStatus,
-    ) {
+    ): Promise<ChangeStudentStatusResponse> {
         try {
             const result = await this.studentService.changeStatus(id, status);
             return {
