@@ -9,7 +9,7 @@ import { UserEntity } from 'src/auth/user.entity';
 import { randomSigns } from 'src/utils/random-signs';
 import { safetyConfiguration } from 'config';
 import { sendActivationLink } from 'src/utils/email-handler';
-import { UserStatus } from 'src/types/user/user.status';
+import { UserStatus } from 'src/types';
 
 
 @Injectable()
@@ -69,4 +69,32 @@ export class StudentService {
         return toSend;
     }
 
+    async changeStatus(id: string, status: UserStatus): Promise<string> {
+        const student = await StudentEntity.findOneOrFail({
+            relations: ['user'],
+            where: {
+                id
+            }
+        });
+
+        switch (status) {
+            case UserStatus.AVAILABLE:
+                //recruiter does it
+                break;
+            case UserStatus.DURING:
+                //recruiter does it
+                break;
+            case UserStatus.HIRED:
+                student.reservationStatus = UserStatus.HIRED;
+                student.user.isActive = false;
+                student.save();
+                student.user.save();
+                break;
+            default:
+                throw new Error('unknown status');
+        }
+
+        return `student status for student id: ${id} was changed into: ${status}`;
+
+    }
 }
