@@ -1,0 +1,21 @@
+[POST]student/:id
+
+return object if good data:
+{
+    "actionStatus": true,
+    "data": "date has been update for student id: :id"
+}
+
+return object if bad data:
+{
+    "actionStatus": true,
+    "data": [
+        "First name"
+    ]
+}
+
+return object if error:
+{
+    "actionStatus": false,
+    "data": null
+}

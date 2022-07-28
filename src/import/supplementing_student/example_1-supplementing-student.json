@@ -1,0 +1,18 @@
+{
+  "tel": 123456789,
+  "firstName": "Anna",
+  "lastName": "Nowak",
+  "githubUsername": "mogiel",
+  "bio": "Programuje",
+  "expectedTypeWork": "manual",
+  "targetWorkCity": "Warszawa",
+  "expectedContractType": "B2B",
+  "expectedSalary": "1234",
+  "canTakeApprenticeship": true,
+  "monthsOfCommercialExp": 12,
+  "education": "Szkoła podstawowa",
+  "workExperience": "Strona intenetowa",
+  "courses": "MegaK",
+  "portfolioUrls": "https://github.com/",
+  "projectUrls": "https://github.com/"
+}

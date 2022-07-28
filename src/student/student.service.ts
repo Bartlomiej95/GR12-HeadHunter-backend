@@ -3,98 +3,118 @@ import { readFile, unlink } from 'fs/promises';
 import { Injectable } from '@nestjs/common';
 import { Role, UploadeFileMulter, UserImport } from 'src/types';
 import { destionation } from 'src/multer/multer.storage';
-import { studentDataValidator } from 'src/utils/student-validation';
+import {
+  ReturnValid,
+  studentDataValidator,
+  studentSupplementingValidator,
+} from 'src/utils/student-validation';
 import { StudentEntity } from './student.entity';
 import { UserEntity } from 'src/auth/user.entity';
 import { randomSigns } from 'src/utils/random-signs';
 import { safetyConfiguration } from 'config';
 import { sendActivationLink } from 'src/utils/email-handler';
 import { UserStatus } from 'src/types';
-
+import { StudentSupplementing } from '../types/student/student.supplementing';
 
 @Injectable()
 export class StudentService {
+  async addStudentFromList(file: UploadeFileMulter): Promise<boolean> {
+    const data = (await readFile(
+      path.join(destionation(), file.file[0].filename),
+    )) as unknown as string;
+    const uncoded = (await JSON.parse(data)) as UserImport[];
 
-    async addStudentFromList(file: UploadeFileMulter): Promise<boolean> {
-        const data = (await readFile(path.join(destionation(), file.file[0].filename))) as unknown as string;
-        const uncoded = await JSON.parse(data) as UserImport[];
+    uncoded.forEach(async (student) => {
+      const validation = await studentDataValidator(student);
 
-        uncoded.forEach(async (student) => {
-            const validation = await studentDataValidator(student);
+      if (!validation) {
+        return;
+      }
+      const newUser = new UserEntity();
 
-            if (!validation) {
-                return
-            }
-            const newUser = new UserEntity();
+      newUser.email = student.email;
+      newUser.role = Role.student;
+      newUser.link = randomSigns(safetyConfiguration.linkLength);
 
-            newUser.email = student.email;
-            newUser.role = Role.student;
-            newUser.link = randomSigns(safetyConfiguration.linkLength);
+      await newUser.save();
 
-            await newUser.save();
+      const newStudent = new StudentEntity();
 
-            const newStudent = new StudentEntity();
+      newStudent.projectDegree = student.projectDegree;
+      newStudent.teamProjectDegree = student.teamProjectDegree;
+      newStudent.courseEngagment = student.courseEngagement;
+      newStudent.courseCompletion = student.courseCompletion;
+      newStudent.bonusProjectUrls = JSON.stringify(student.bonusProjectUrls);
+      newStudent.user = newUser;
 
-            newStudent.projectDegree = student.projectDegree;
-            newStudent.teamProjectDegree = student.teamProjectDegree;
-            newStudent.courseEngagment = student.courseEngagement;
-            newStudent.courseCompletion = student.courseCompletion;
-            newStudent.bonusProjectUrls = JSON.stringify(student.bonusProjectUrls);
-            newStudent.user = newUser;
+      await newStudent.save();
 
-            await newStudent.save()
+      await sendActivationLink(newUser.link, 'student', newUser.email);
+    });
 
-            await sendActivationLink(newUser.link, 'student', newUser.email)
+    await unlink(path.join(destionation(), file.file[0].filename));
 
-        });
+    return true;
+  }
 
-        await unlink(path.join(destionation(), file.file[0].filename));
+  async getFreeStudnetList() {
+    const result = await StudentEntity.find({
+      where: {
+        reservationStatus: UserStatus.AVAILABLE,
+      },
+      relations: {
+        user: true,
+      },
+    });
 
-        return true;
+    const activeStudent = result.filter(
+      (student) => student.user.isActive === true,
+    );
+    const toSend = activeStudent.map((student) => ({
+      ...student,
+      user: 'active',
+    }));
+
+    return toSend;
+  }
+
+  async changeStatus(id: string, status: UserStatus): Promise<string> {
+    const student = await StudentEntity.findOneOrFail({
+      relations: ['user'],
+      where: {
+        id,
+      },
+    });
+
+    switch (status) {
+      case UserStatus.AVAILABLE:
+        //recruiter does it
+        break;
+      case UserStatus.DURING:
+        //recruiter does it
+        break;
+      case UserStatus.HIRED:
+        student.reservationStatus = UserStatus.HIRED;
+        student.user.isActive = false;
+        student.save();
+        student.user.save();
+        break;
+      default:
+        throw new Error('unknown status');
     }
 
-    async getFreeStudnetList() {
-        const result = await StudentEntity.find({
-            where: {
-                reservationStatus: UserStatus.AVAILABLE
-            },
-            relations: {
-                user: true,
-            }
-        })
+    return `student status for student id: ${id} was changed into: ${status}`;
+  }
 
-        const activeStudent = result.filter(student => student.user.isActive === true);
-        const toSend = activeStudent.map(student => ({ ...student, user: 'active' }))
+  async supplementingStudentsData(id: string, data: StudentSupplementing) {
+    const valid: ReturnValid = await studentSupplementingValidator(data);
 
-        return toSend;
+    if (valid.validError) {
+      return valid.data;
     }
 
-    async changeStatus(id: string, status: UserStatus): Promise<string> {
-        const student = await StudentEntity.findOneOrFail({
-            relations: ['user'],
-            where: {
-                id
-            }
-        });
+    await StudentEntity.update(id, data);
 
-        switch (status) {
-            case UserStatus.AVAILABLE:
-                //recruiter does it
-                break;
-            case UserStatus.DURING:
-                //recruiter does it
-                break;
-            case UserStatus.HIRED:
-                student.reservationStatus = UserStatus.HIRED;
-                student.user.isActive = false;
-                student.save();
-                student.user.save();
-                break;
-            default:
-                throw new Error('unknown status');
-        }
-
-        return `student status for student id: ${id} was changed into: ${status}`;
-
-    }
+    return `date has been update for student id: ${id}`;
+  }
 }
