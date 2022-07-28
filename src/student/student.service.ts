@@ -10,6 +10,7 @@ import { randomSigns } from 'src/utils/random-signs';
 import { safetyConfiguration } from 'config';
 import { sendActivationLink } from 'src/utils/email-handler';
 import { UserStatus } from 'src/types';
+import {HrEntity} from "../hr/hr.entity";
 
 
 @Injectable()
@@ -134,5 +135,35 @@ export class StudentService {
         };
 
         return cv;
+    }
+
+    async studentsSelectedByHr(hrId: string) {
+        try {
+            const hr = await HrEntity.findOne({where: { id: hrId}});
+            if(!hr){
+                return {
+                    actionStatus: false,
+                    message: 'Nie istnieje w bazie HR o takim id',
+                    students: [],
+                }
+            }
+
+            const students = await StudentEntity.findByHrId(hrId);
+            if(!students){
+                return{
+                    actionStatus: false,
+                    message: 'Nie masz wybranych żadnych studentów',
+                    students: [],
+                }
+            }
+
+            return {
+                actionStatus: true,
+                message: `Aktualnie masz wybranych ${students.length}`,
+                students: students,
+            }
+        } catch(e) {
+            throw new Error(e);
+        }
     }
 }

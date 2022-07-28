@@ -11,14 +11,14 @@ import { Controller,
     UseInterceptors
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { AuthGuard } from '@nestjs/passport';
 import { destionation } from 'src/multer/multer.storage';
-import {ChangeStudentStatusResponse, UploadeFileMulter } from 'src/types';
+import {ChangeStudentStatusResponse, StudentsSelectedByHrResponse, UploadeFileMulter} from 'src/types';
 import { FileTypeValidationPipe } from 'src/pipe/file-validation.pipe';
 import { AcceptableExceptionFilter } from 'src/filter/not-acceptable.filter';
 import { StudentService } from './student.service';
 import { StudentEntity } from './student.entity';
 import { UserStatus } from 'src/types';
+import { AuthGuard } from 'src/guards/Auth.guard';
 
 @Controller('student')
 export class StudentController {
@@ -26,6 +26,14 @@ export class StudentController {
     constructor(
         @Inject(StudentService) private studentService: StudentService
     ) { }
+
+    @Get('/selected/:hrId')
+    @UseGuards(AuthGuard)
+    async studentsSelectedByHr(
+        @Param('hrId') hrId: string
+    ): Promise<StudentsSelectedByHrResponse>{
+        return await this.studentService.studentsSelectedByHr(hrId);
+    }
 
 
     @Post('/add')
