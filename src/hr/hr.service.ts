@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {forwardRef, Inject, Injectable } from '@nestjs/common';
 import { safetyConfiguration } from 'config';
 import { AfterAddData, UserResponse } from 'src/types';
 import { randomSigns } from 'src/utils/random-signs';
@@ -10,9 +10,14 @@ import { UserEntity } from 'src/auth/user.entity';
 import { FindOptionsWhere } from 'typeorm';
 import { StudentEntity } from 'src/student/student.entity';
 import { UserStatus } from 'src/types/user/user.status';
+import { StudentService } from 'src/student/student.service';
 
 @Injectable()
 export class HrService {
+    constructor(
+        @Inject(forwardRef(() => StudentService)) private studentService: StudentService,
+    ) {
+    }
 
     async addHrUser(data: HrDto): Promise<AfterAddData> {
 
