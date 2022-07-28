@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { readFile, unlink } from 'fs/promises';
 import { Injectable } from '@nestjs/common';
-import { Role, UploadeFileMulter, UserImport } from 'src/types';
+import { Role, StudentCVResponse, UploadeFileMulter, UserImport } from 'src/types';
 import { destionation } from 'src/multer/multer.storage';
 import { studentDataValidator } from 'src/utils/student-validation';
 import { StudentEntity } from './student.entity';
@@ -96,5 +96,43 @@ export class StudentService {
 
         return `student status for student id: ${id} was changed into: ${status}`;
 
+    }
+
+    async getCV(id: string): Promise<StudentCVResponse> {
+
+        const student = await StudentEntity.findOneOrFail({
+            relations: ['user','hr'],
+            where: {
+                id
+            }
+        });
+
+        const cv: StudentCVResponse = {
+            email: student.user.email,
+            courseCompletion: student.courseCompletion,
+            courseEngagment: student.courseEngagment,
+            projectDegree: student.projectDegree,
+            teamProjectDegree: student.teamProjectDegree,
+            bonusProjectUrls: JSON.parse(student.bonusProjectUrls),
+            tel: student.tel,
+            firstName: student.firstName,
+            lastName: student.lastName,
+            githubUsername: student.githubUsername,
+            portfolioUrls: JSON.parse(student.portfolioUrls),
+            projectUrls: JSON.parse(student.projectUrls),
+            bio: student.bio,
+            expectedTypeWork: student.expectedTypeWork,
+            targetWorkCity: student.targetWorkCity,
+            expectedContractType: student.expectedContractType,
+            expectedSalary: Number(student.expectedSalary),
+            canTakeApprenticeship: student.canTakeApprenticeship,
+            monthsOfCommercialExp: student.monthsOfCommercialExp,
+            education: student.education,
+            workExperience: student.workExperience,
+            courses: student.courses,
+            hrId: student.hr.id,
+        };
+
+        return cv;
     }
 }
