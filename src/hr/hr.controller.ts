@@ -43,4 +43,25 @@ export class HrController {
         return await this.hrService.AddStudentToList(user, id);
     }
 
+    @Get('/:hrid/student/:stid')
+    // @UseGuards(AuthGuard)
+    async getStudentCV(
+        @Param('hrid') hrId: string,
+        @Param('stid') studentId: string
+    ): Promise<any> {
+        try {
+            const result = await this.hrService.getStudentCV(hrId, studentId);
+            return {
+                actionStatus: true,
+                data: result
+            }
+        } catch (err) {
+            console.log(err)
+            return {
+                actionStatus: false,
+                data: null
+            }
+        }
+    }
+
 }

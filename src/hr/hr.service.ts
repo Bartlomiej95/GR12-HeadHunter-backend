@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import {forwardRef, Inject, Injectable } from '@nestjs/common';
 import { safetyConfiguration } from 'config';
-import { AfterAddData, UserResponse } from 'src/types';
+import { AfterAddData, StudentCVResponse, UserResponse } from 'src/types';
 import { randomSigns } from 'src/utils/random-signs';
 import { HrDto } from './dto/hr-add.dto';
 import { HrEntity } from './hr.entity';
@@ -10,9 +10,14 @@ import { UserEntity } from 'src/auth/user.entity';
 import { FindOptionsWhere } from 'typeorm';
 import { StudentEntity } from 'src/student/student.entity';
 import { UserStatus } from 'src/types/user/user.status';
+import { StudentService } from 'src/student/student.service';
 
 @Injectable()
 export class HrService {
+    constructor(
+        @Inject(forwardRef(() => StudentService)) private studentService: StudentService,
+    ) {
+    }
 
     async addHrUser(data: HrDto): Promise<AfterAddData> {
 
@@ -89,6 +94,21 @@ export class HrService {
         return {
             actionStatus: true,
             message: 'student dodany do rozmowy'
+        }
+    }
+
+    async getStudentCV(hrId, studentId): Promise<StudentCVResponse> {
+        const cv = await this.studentService.getCV(studentId);
+        const hr = await HrEntity.findOneOrFail({
+            where: {
+                id: hrId
+            }
+        });
+
+        if(cv.hrId !== null && cv.hrId === hrId) {
+            return cv;
+        } else {
+            throw new Error("Nie wybrałeś podanego kursanta");
         }
     }
 }
