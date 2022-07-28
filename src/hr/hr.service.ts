@@ -1,6 +1,6 @@
 import {forwardRef, Inject, Injectable } from '@nestjs/common';
 import { safetyConfiguration } from 'config';
-import { AfterAddData, UserResponse } from 'src/types';
+import { AfterAddData, StudentCVResponse, UserResponse } from 'src/types';
 import { randomSigns } from 'src/utils/random-signs';
 import { HrDto } from './dto/hr-add.dto';
 import { HrEntity } from './hr.entity';
@@ -94,6 +94,21 @@ export class HrService {
         return {
             actionStatus: true,
             message: 'student dodany do rozmowy'
+        }
+    }
+
+    async getStudentCV(hrId, studentId): Promise<StudentCVResponse> {
+        const cv = await this.studentService.getCV(studentId);
+        const hr = await HrEntity.findOneOrFail({
+            where: {
+                id: hrId
+            }
+        });
+
+        if(cv.hrId !== null && cv.hrId === hrId) {
+            return cv;
+        } else {
+            throw new Error("Nie wybrałeś podanego kursanta");
         }
     }
 }
