@@ -1,5 +1,6 @@
 import { rating } from "../user/user.import.type";
 import {ExpectedContractType, ExpectedTypeWork } from "../user/user.register.type";
+import {StudentEntity} from "../../student/student.entity";
 
 export interface ChangeStudentStatusResponse {
     actionStatus: boolean;
@@ -31,4 +32,10 @@ export interface StudentCVResponse {
     workExperience: string;
     courses: string;
     hrId: string | null;
+}
+
+export interface StudentsSelectedByHrResponse {
+    actionStatus: boolean,
+    message: string,
+    students: Array<StudentEntity>,
 }
