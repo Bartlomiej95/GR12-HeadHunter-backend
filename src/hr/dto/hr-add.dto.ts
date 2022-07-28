@@ -1,6 +1,7 @@
 export class HrDto {
     email: string;
-    fullName: string;
+    firstName: string;
+    lastName: string;
     company: string;
     maxReservedStudents: number;
 }

@@ -25,24 +25,19 @@ export class StudentEntity extends BaseEntity {
     teamProjectDegree: rating;
 
     @Column({
-        type: 'longtext'
+        type: 'text'
     })
     bonusProjectUrls: string;
 
     @Column({
-        default: null
+        default: false
     })
-    tel: number | null;
+    areDataPatched: boolean;
 
     @Column({
         default: null
     })
-    firstName: string | null;
-
-    @Column({
-        default: null
-    })
-    lastName: string | null;
+    tel: string | null;
 
     @Column({
         default: null
@@ -51,12 +46,12 @@ export class StudentEntity extends BaseEntity {
 
     @Column({
         default: null,
-        type: 'json'
+        type: 'text'
     })
     portfolioUrls: string | null;
 
     @Column({
-        type: 'json',
+        type: 'text',
         default: null
     })
     projectUrls: string | null;

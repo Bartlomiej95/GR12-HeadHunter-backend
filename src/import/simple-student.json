@@ -16,12 +16,37 @@
     "bonusProjectUrls": ["url do github", "url do github"]
     },
     {
-    "email": "developerdariusz@gmail.com",
+    "email": "simple4@gmail22.com",
     "courseCompletion": 4,
     "courseEngagment": 4,
     "projectDegree": 4,
     "teamProjectDegree": 5,
     "bonusProjectUrls": ["url do github", "url do github"]
-}]
+    },
+    {
+    "email": "simple5@gmail22.com",
+    "courseCompletion": 4,
+    "courseEngagment": 4,
+    "projectDegree": 4,
+    "teamProjectDegree": 5,
+    "bonusProjectUrls": ["url do github", "url do github"]
+    },
+    {
+    "email": "simple6@gmail22.com",
+    "courseCompletion": 4,
+    "courseEngagment": 4,
+    "projectDegree": 4,
+    "teamProjectDegree": 5,
+    "bonusProjectUrls": ["url do github", "url do github"]
+    },
+    {
+    "email": "simple7@gmail22.com",
+    "courseCompletion": 4,
+    "courseEngagment": 4,
+    "projectDegree": 4,
+    "teamProjectDegree": 5,
+    "bonusProjectUrls": ["url do github", "url do github"]
+    }
+]
 
 

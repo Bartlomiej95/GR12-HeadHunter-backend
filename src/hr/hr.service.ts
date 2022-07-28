@@ -20,19 +20,20 @@ export class HrService {
 
         user.email = data.email;
         user.link = randomSigns(safetyConfiguration.linkLength);
-        user.role = Role.recruiter
+        user.role = Role.recruiter;
+        user.firstName = data.firstName;
+        user.lastName = data.lastName;
 
         await user.save()
 
         const hr = new HrEntity()
         hr.company = data.company;
-        hr.fullName = data.fullName;
         hr.maxReservedStudents = data.maxReservedStudents;
         hr.user = user;
 
         await hr.save()
 
-        await sendActivationLink(user.link, 'recruiter', user.email);
+        await sendActivationLink(user.link, user.email, 'recruiter');
 
         return {
             actionStatus: true,
@@ -89,6 +90,40 @@ export class HrService {
         return {
             actionStatus: true,
             message: 'student dodany do rozmowy'
+        }
+    }
+
+    async studentPushback(id: string): Promise<UserResponse> {
+
+        try {
+            const result = await StudentEntity.findOne({
+                where: {
+                    id,
+                }
+            })
+
+            if (!result) {
+                return {
+                    actionStatus: false,
+                    message: 'Kursant o podanym id nie istnieje'
+                }
+            }
+
+            result.reservationStatus = UserStatus.AVAILABLE;
+            result.hr = null;
+
+            await result.save();
+
+            return {
+                actionStatus: true,
+                message: 'Kursant nie jest już na rozmowie'
+            }
+        } catch (err) {
+            console.log(err)
+            return {
+                actionStatus: false,
+                message: 'Błąd serwera'
+            }
         }
     }
 }

@@ -7,6 +7,7 @@ import { UserObject } from 'src/decorators/user-object.decorator';
 import { AuthGuard } from '../guards/Auth.guard';
 import { UserEntity } from './user.entity';
 import { PassChange } from './dto/pass-change.dto';
+import { EmailChanging } from './dto/email-change.dto';
 
 @Controller('login')
 export class AuthController {
@@ -30,6 +31,13 @@ export class AuthController {
         return await this.authService.register(req, res);
     }
 
+    @Post('/reset')
+    async passwordReset(
+        @Body() body: { email: string }
+    ) {
+        return await this.authService.sendResetPasswordLink(body.email)
+    }
+
     @Get('/out')
     @UseGuards(AuthGuard)
     async logout(
@@ -38,6 +46,18 @@ export class AuthController {
     ) {
         await this.authService.logout(user, res);
         return { ok: true }
+    }
+
+    @Get('/check')
+    @UseGuards(AuthGuard)
+    async userLoginCheck(
+        @UserObject() user: UserEntity,
+    ) {
+        return {
+            logedIn: true,
+            message: { role: user.role, firstName: user.firstName, lasyName: user.lastName },
+        }
+
     }
 
     @Post('/passchange')
@@ -50,4 +70,12 @@ export class AuthController {
         return await this.authService.passwordChanging(user, data, res)
     }
 
+    @Post('/emailchange')
+    @UseGuards(AuthGuard)
+    async emailChange(
+        @Body() data: EmailChanging,
+        @UserObject() user: UserEntity,
+    ) {
+        return await this.authService.emailChanging(user, data)
+    }
 }

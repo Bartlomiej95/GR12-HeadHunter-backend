@@ -12,13 +12,29 @@ export class UserEntity extends BaseEntity {
     @Column()
     email: string;
 
-    @Column()
+    @Column({
+        default: null
+    })
+    firstName: string;
+
+    @Column({
+        default: null
+    })
+    lastName: string;
+
+    @Column({
+        default: null,
+    })
     hash: string;
 
-    @Column()
+    @Column({
+        default: null,
+    })
     salt: string;
 
-    @Column()
+    @Column({
+        default: null,
+    })
     iv: string;
 
     @Column({

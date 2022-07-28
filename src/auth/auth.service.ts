@@ -10,6 +10,8 @@ import { RegistrationData } from './dto/registration.dto';
 import { randomSigns } from 'src/utils/random-signs';
 import { PassChange } from './dto/pass-change.dto';
 import { UserResponse } from 'src/types';
+import { EmailChanging } from './dto/email-change.dto';
+import { sendResetLink } from 'src/utils/email-handler';
 
 interface JwtPayload {
     id: string
@@ -85,12 +87,16 @@ export class AuthService {
             })
                 .json({
                     logedIn: true,
-                    message: user.role,
+                    message: { role: user.role, firstName: user.firstName, lastName: user.lastName }
                 })
         } catch (err) {
+            console.log(err)
             res
                 .status(500)
-                .json({ error: err.message })
+                .json({
+                    logedIn: false,
+                    message: 'Błąd serwera'
+                })
         }
     }
 
@@ -137,7 +143,7 @@ export class AuthService {
 
             res.json({
                 actionStatus: true,
-                message: 'Konto zostało aktywowane',
+                message: 'Hasło nadane, konto jest aktywne',
             })
         } catch (err) {
             console.log(err)
@@ -201,13 +207,101 @@ export class AuthService {
 
             await user.save();
 
-            this.logout(user, res);
+            return {
+                actionStatus: true,
+                message: 'Hasło zostało zmienione'
+            }
 
         } catch (err) {
             console.log(err)
             return {
                 actionStatus: false,
                 message: 'błąd serwera'
+            }
+        }
+    }
+
+    async emailChanging(user: UserEntity, data: EmailChanging): Promise<UserResponse> {
+
+        try {
+            const userValidation = comparer(data.password, user.hash, user.iv, user.salt)
+
+            if (!userValidation) {
+                return {
+                    actionStatus: false,
+                    message: 'hasło jest nieprawidłowe'
+                }
+            }
+
+            const emailValid = await UserEntity.findOne({
+                where: {
+                    email: data.newEmail
+                }
+            })
+
+            if (emailValid) {
+                return {
+                    actionStatus: false,
+                    message: 'podany email już istnieje w bazie'
+                }
+            }
+
+            const SignValidator = data.newEmail.includes('@');
+
+            if (!SignValidator) {
+                return {
+                    actionStatus: false,
+                    message: 'niepoprawny format email'
+                }
+            }
+
+            user.email = data.newEmail;
+            await user.save();
+
+            return {
+                actionStatus: true,
+                message: 'adres email został zmieniony'
+            }
+
+        } catch (err) {
+            console.log(err)
+            return {
+                actionStatus: false,
+                message: 'błąd serwera'
+            }
+        }
+    }
+
+    async sendResetPasswordLink(email: string): Promise<UserResponse> {
+
+        try {
+            const result = await UserEntity.findOne({
+                where: {
+                    email,
+                }
+            })
+
+            if (!result) {
+                return {
+                    actionStatus: false,
+                    message: 'podany email nie istnieje w bazie'
+                }
+            }
+
+            result.link = randomSigns(safetyConfiguration.linkLength)
+
+            await sendResetLink(result.link, email);
+            await result.save()
+
+            return {
+                actionStatus: true,
+                message: 'Link resetujący został wysłany'
+            }
+        } catch (err) {
+            console.log(err)
+            return {
+                actionStatus: false,
+                message: 'Błąd serwera'
             }
         }
     }

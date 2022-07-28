@@ -7,6 +7,7 @@ import { HrDto } from './dto/hr-add.dto';
 import { HrService } from './hr.service';
 import { UserObject } from 'src/decorators/user-object.decorator';
 import { UserEntity } from 'src/auth/user.entity';
+import { UseRole } from 'src/decorators/user-role.decorator';
 
 @Controller('recruiter')
 export class HrController {
@@ -16,7 +17,8 @@ export class HrController {
 
 
     @Post('/add')
-    //@UseGuards(AuthGuard()) ścieżka będzie autoryzowana dla admina narazie do testów nie musi być 
+    @UseRole('admin')
+    @UseGuards(AuthGuard)
     @UsePipes(NewHrUserValidation)
     @UseFilters(new AcceptableExceptionFilter())
     async addRecruiterAccount(
@@ -35,12 +37,23 @@ export class HrController {
     }
 
     @Get('/addstudent/:id')
+    @UseRole('recruiter')
     @UseGuards(AuthGuard)
     async addStudentToList(
         @UserObject() user: UserEntity,
         @Param('id') id: string
     ) {
         return await this.hrService.AddStudentToList(user, id);
+    }
+
+    @Get('/pushback/:id')
+    @UseRole('recruiter')
+    @UseGuards(AuthGuard)
+    async pushBackStudent(
+        @UserObject() user: UserEntity,
+        @Param('id') id: string
+    ) {
+        return await this.hrService.studentPushback(id);
     }
 
 }

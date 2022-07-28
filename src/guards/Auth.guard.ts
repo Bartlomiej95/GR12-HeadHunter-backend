@@ -3,13 +3,22 @@ import { safetyConfiguration } from 'config';
 import { verify } from 'jsonwebtoken';
 import { UserEntity } from 'src/auth/user.entity';
 import { DecodedToken } from 'src/types';
+import { Reflector } from "@nestjs/core";
 
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+
+    constructor(
+        private reflector: Reflector
+    ) {
+    }
+
     async canActivate(
         context: ExecutionContext,
     ): Promise<any> {
+
+        const role = this.reflector.get<string>('role', context.getHandler());
 
         const jwt = context.switchToHttp().getRequest().cookies.jwt;
 
@@ -27,6 +36,12 @@ export class AuthGuard implements CanActivate {
 
         if (!result) {
             throw new UnauthorizedException()
+        }
+
+        if (role) {
+            if (role !== result.role) {
+                throw new UnauthorizedException()
+            }
         }
 
         return true;

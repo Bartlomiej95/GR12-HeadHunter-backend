@@ -1,12 +1,16 @@
-import { Controller, Get, Inject, Post, UploadedFile, UploadedFiles, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Param, Patch, Post, UploadedFiles, UseFilters, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { AuthGuard } from '@nestjs/passport';
 import { destionation } from 'src/multer/multer.storage';
 import { UploadeFileMulter } from 'src/types';
 import { FileTypeValidationPipe } from 'src/pipe/file-validation.pipe';
 import { AcceptableExceptionFilter } from 'src/filter/not-acceptable.filter';
 import { StudentService } from './student.service';
-import { StudentEntity } from './student.entity';
+import { AuthGuard } from 'src/guards/Auth.guard';
+import { UseRole } from 'src/decorators/user-role.decorator';
+import { StudentExtendedData, StudentExtendedDataPatch } from './dto/extended-data.dto';
+import { StudentExtensionDataValidate } from 'src/pipe/student-validation.pipe';
+import { UserObject } from 'src/decorators/user-object.decorator';
+import { UserEntity } from 'src/auth/user.entity';
 
 @Controller('student')
 export class StudentController {
@@ -17,7 +21,8 @@ export class StudentController {
 
 
     @Post('/add')
-    //@UseGuards(AuthGuard('jwt')) // do testów nieaktywne, jeszcze nie przetestowane
+    @UseRole('admin')
+    @UseGuards(AuthGuard)
     @UseInterceptors(
         FileFieldsInterceptor([
             {
@@ -35,10 +40,10 @@ export class StudentController {
     ) {
         try {
 
-            await this.studentService.addStudentFromList(incomeFile);
+            const result = await this.studentService.addStudentFromList(incomeFile);
             return {
                 actionStatus: true,
-                message: `Import zakończony pomyślnie`,
+                message: `Import zakończony, pobrano ${result.iterations} użytkowników, do bazy dodano: ${result.added}, niepowodzenia: ${result.fold}`,
             }
         } catch (err) {
             console.log(err)
@@ -50,6 +55,8 @@ export class StudentController {
     }
 
     @Get('/freelist')
+    @UseRole('recruiter')
+    @UseGuards(AuthGuard)
     async getFreeStudents() {
         try {
             const result = await this.studentService.getFreeStudnetList();
@@ -64,5 +71,54 @@ export class StudentController {
                 data: null
             }
         }
+    }
+
+    @Get('getone/:id')
+    @UseGuards(AuthGuard)
+    async getStudnetforCV(
+        @Param('id') id: string
+    ) {
+        try {
+            const result = await this.studentService.getOneStudent(id);
+            if (!result) {
+                return {
+                    actionStatus: false,
+                    message: 'Student o podanym id nie figuruje w bazie'
+                }
+            } else {
+                return {
+                    actionStatus: true,
+                    message: result
+                }
+            }
+        } catch (err) {
+            console.log(err)
+            return {
+                actionStatus: false,
+                message: 'Błąd serwera'
+            }
+        }
+    }
+
+    @Patch('/update')
+    @UseRole('student')
+    @UseGuards(AuthGuard)
+    @UseFilters(new AcceptableExceptionFilter())
+    async studentDataUpdate(
+        @UserObject() user: UserEntity,
+        @Body(
+            StudentExtensionDataValidate
+        ) data: StudentExtendedDataPatch,
+    ) {
+        return this.studentService.patchStudentData(user, data)
+    }
+
+    @Post('/register')
+    @UsePipes(StudentExtensionDataValidate)
+    @UseFilters(new AcceptableExceptionFilter())
+    async addStudentRegistrationData(
+        @Body() data: StudentExtendedData
+    ) {
+        return await this.studentService.addStudentdata(data)
     }
 }

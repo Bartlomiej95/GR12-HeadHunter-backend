@@ -10,9 +10,6 @@ export class HrEntity extends BaseEntity {
     id: string
 
     @Column()
-    fullName: string;
-
-    @Column()
     company: string;
 
     @Column()

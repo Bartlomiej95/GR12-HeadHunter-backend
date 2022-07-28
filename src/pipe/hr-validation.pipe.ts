@@ -26,7 +26,7 @@ export class NewHrUserValidation implements PipeTransform<HrDto, Promise<HrDto>>
             throw new NotAcceptableException(Error, 'niepoprawny format email')
         }
 
-        if (data.fullName.length < 1 || data.company.length < 1) {
+        if (data.firstName.length < 1 || data.company.length < 1 || data.lastName.length < 1) {
             throw new NotAcceptableException(Error, 'nie wszystkie wymagane pola zostały uzupełnione')
         }
 

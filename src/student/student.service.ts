@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { readFile, unlink } from 'fs/promises';
 import { Injectable } from '@nestjs/common';
-import { Role, UploadeFileMulter, UserImport } from 'src/types';
+import { Role, UploadeFileMulter, UserImport, UserResponse } from 'src/types';
 import { destionation } from 'src/multer/multer.storage';
 import { studentDataValidator } from 'src/utils/student-validation';
 import { StudentEntity } from './student.entity';
@@ -10,53 +10,85 @@ import { randomSigns } from 'src/utils/random-signs';
 import { safetyConfiguration } from 'config';
 import { sendActivationLink } from 'src/utils/email-handler';
 import { UserStatus } from 'src/types/user/user.status';
+import { StudentExtendedData, StudentExtendedDataPatch } from './dto/extended-data.dto';
+import { FindOptionsWhere, Not } from 'typeorm';
+import { studentFilter } from 'src/utils/student-filter';
 
+interface Progress {
+    added: number;
+    fold: number;
+    iterations: number;
+}
 
 @Injectable()
 export class StudentService {
 
-    async addStudentFromList(file: UploadeFileMulter): Promise<boolean> {
+    async addStudentFromList(file: UploadeFileMulter): Promise<Progress> {
         const data = (await readFile(path.join(destionation(), file.file[0].filename))) as unknown as string;
         const uncoded = await JSON.parse(data) as UserImport[];
 
-        uncoded.forEach(async (student) => {
+        const addedStudents = await Promise.all(uncoded.map(async (student) => {
             const validation = await studentDataValidator(student);
 
+
             if (!validation) {
-                return
+                return false
             }
-            const newUser = new UserEntity();
 
-            newUser.email = student.email;
-            newUser.role = Role.student;
-            newUser.link = randomSigns(safetyConfiguration.linkLength);
+            try {
+                const newUser = new UserEntity();
 
-            await newUser.save();
+                newUser.email = student.email;
+                newUser.role = Role.student;
+                newUser.link = randomSigns(safetyConfiguration.linkLength);
 
-            const newStudent = new StudentEntity();
+                await newUser.save();
 
-            newStudent.projectDegree = student.projectDegree;
-            newStudent.teamProjectDegree = student.teamProjectDegree;
-            newStudent.courseEngagment = student.courseEngagement;
-            newStudent.courseCompletion = student.courseCompletion;
-            newStudent.bonusProjectUrls = JSON.stringify(student.bonusProjectUrls);
-            newStudent.user = newUser;
+                const newStudent = new StudentEntity();
 
-            await newStudent.save()
+                newStudent.projectDegree = student.projectDegree;
+                newStudent.teamProjectDegree = student.teamProjectDegree;
+                newStudent.courseEngagment = student.courseEngagement;
+                newStudent.courseCompletion = student.courseCompletion;
+                newStudent.bonusProjectUrls = JSON.stringify(student.bonusProjectUrls);
+                newStudent.user = newUser;
 
-            await sendActivationLink(newUser.link, 'student', newUser.email)
+                await newStudent.save()
 
-        });
+                //await sendActivationLink(newUser.link, newUser.email, 'student') chwilowo wyłączam żeby nie przekroczyć limitu wysłanych maili przy testach
+
+                return true;
+            } catch (err) {
+                console.log(err)
+                return false
+            }
+        }));
 
         await unlink(path.join(destionation(), file.file[0].filename));
 
-        return true;
+        const result = {
+            iterations: 0,
+            added: 0,
+            fold: 0
+        }
+
+        await Promise.all(addedStudents.map(status => {
+            result.iterations++;
+            if (status) {
+                result.added++
+            } else {
+                result.fold++
+            }
+        }))
+
+        return result;
     }
 
     async getFreeStudnetList() {
         const result = await StudentEntity.find({
             where: {
-                reservationStatus: UserStatus.AVAILABLE
+                reservationStatus: UserStatus.AVAILABLE,
+                areDataPatched: true,
             },
             relations: {
                 user: true,
@@ -67,6 +99,169 @@ export class StudentService {
         const toSend = activeStudent.map(student => ({ ...student, user: 'active' }))
 
         return toSend;
+    }
+
+    async getOneStudent(id: string): Promise<StudentEntity | null> {
+        const result = await StudentEntity.findOne({
+            where: {
+                id,
+                areDataPatched: true
+            }
+        })
+
+        if (!result) return null;
+
+        const data = studentFilter(result)
+        return data;
+    }
+
+    async addStudentdata(data: StudentExtendedData): Promise<UserResponse> {
+
+        try {
+            const user = await UserEntity.findOne({
+                where: {
+                    email: data.email
+                }
+            })
+
+            if (!user) return {
+                actionStatus: false,
+                message: 'użytkownik nie istnieje w bazie',
+            }
+
+
+
+            const student = await StudentEntity.findOne({
+                where: {
+                    user: user as FindOptionsWhere<UserEntity>
+                }
+            })
+
+            if (!student) return {
+                actionStatus: false,
+                message: 'Konto kursanta nie istnieje',
+            }
+
+            const githubValid = await StudentEntity.findOne({
+                where: {
+                    githubUsername: data.githubUsername
+                }
+            })
+
+            if (githubValid) {
+                return {
+                    actionStatus: false,
+                    message: 'podane konto github jest już w bazie',
+                }
+            }
+
+            user.firstName = data.firstName;
+            user.lastName = data.lastName;
+
+            await user.save()
+
+            student.tel = data.tel;
+            student.githubUsername = data.githubUsername;
+            student.portfolioUrls = JSON.stringify(data.portfolioUrls);
+            student.githubUsername = data.githubUsername;
+            student.portfolioUrls = JSON.stringify(data.portfolioUrls);
+            student.projectUrls = JSON.stringify(data.projectUrls);
+            student.bio = data.bio;
+            student.expectedTypeWork = data.expectedTypeWork;
+            student.targetWorkCity = data.targetWorkCity;
+            student.expectedContractType = data.expectedContractType;
+            student.expectedSalary = data.expectedSalary;
+            student.canTakeApprenticeship = data.canTakeApprenticeship;
+            student.monthsOfCommercialExp = data.monthsOfCommercialExp;
+            student.education = data.education;
+            student.workExperience = data.workExperience;
+            student.courses = data.courses;
+            student.areDataPatched = true;
+
+            await student.save()
+
+            return {
+                actionStatus: true,
+                message: 'dane zostały zapisane poprawnie',
+            }
+        } catch (err) {
+            console.log(err)
+            return {
+                actionStatus: false,
+                message: 'błąd serwera',
+            }
+        }
+    }
+
+    async patchStudentData(user: UserEntity, data: StudentExtendedDataPatch): Promise<UserResponse> {
+        try {
+
+
+            const student = await StudentEntity.findOne({
+                where: {
+                    user: user as FindOptionsWhere<UserEntity>
+                }
+            })
+
+            if (!student) {
+                return {
+                    actionStatus: false,
+                    message: 'taki kursant nie istnieje',
+                }
+            }
+
+
+            const gitHubValid = await StudentEntity.find({
+                where: {
+                    id: Not(student.id),
+                    githubUsername: data.githubUsername
+                }
+            })
+
+            if (gitHubValid.length > 0) {
+                return {
+                    actionStatus: false,
+                    message: 'podane konto github jest już w bazie',
+                }
+            }
+
+            user.firstName = data.firstName;
+            user.lastName = data.lastName;
+
+            await user.save()
+
+            student.tel = data.tel;
+            student.githubUsername = data.githubUsername;
+            student.portfolioUrls = JSON.stringify(data.portfolioUrls);
+            student.githubUsername = data.githubUsername;
+            student.portfolioUrls = JSON.stringify(data.portfolioUrls);
+            student.projectUrls = JSON.stringify(data.projectUrls);
+            student.bio = data.bio;
+            student.expectedTypeWork = data.expectedTypeWork;
+            student.targetWorkCity = data.targetWorkCity;
+            student.expectedContractType = data.expectedContractType;
+            student.expectedSalary = data.expectedSalary;
+            student.canTakeApprenticeship = data.canTakeApprenticeship;
+            student.monthsOfCommercialExp = data.monthsOfCommercialExp;
+            student.education = data.education;
+            student.workExperience = data.workExperience;
+            student.courses = data.courses;
+            student.areDataPatched = true;
+
+            await student.save()
+
+            return {
+                actionStatus: true,
+                message: 'Dane zostały zaktualizowane',
+            }
+        } catch (err) {
+            console.log(err)
+            return {
+                actionStatus: false,
+                message: 'Błąd serwera',
+            }
+        }
+
     }
 
 }
