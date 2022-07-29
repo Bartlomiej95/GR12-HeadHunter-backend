@@ -13,6 +13,7 @@ import { UserStatus } from 'src/types';
 import { studentFilter } from 'src/utils/student-filter';
 import { StudentExtendedData, StudentExtendedDataPatch } from './dto/extended-data.dto';
 import { FindOptionsWhere, Not } from 'typeorm';
+import { comparer } from 'src/auth/crypto';
 
 interface Progress {
     added: number;
@@ -129,6 +130,12 @@ export class StudentService {
                 message: 'użytkownik nie istnieje w bazie',
             }
 
+            const passwordValid = comparer(data.password, user.hash, user.iv, user.salt);
+
+            if (!passwordValid) return {
+                actionStatus: false,
+                message: 'niepoprawne hasło',
+            }
 
 
             const student = await StudentEntity.findOne({
@@ -151,7 +158,7 @@ export class StudentService {
             if (githubValid) {
                 return {
                     actionStatus: false,
-                    message: 'podane konto github jest już w bazie',
+                    message: 'podane konto github istnieje już w bazie',
                 }
             }
 
@@ -221,7 +228,7 @@ export class StudentService {
             if (gitHubValid.length > 0) {
                 return {
                     actionStatus: false,
-                    message: 'podane konto github jest już w bazie',
+                    message: 'podane konto github istnieje już w bazie',
                 }
             }
 

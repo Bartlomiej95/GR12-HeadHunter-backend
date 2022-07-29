@@ -13,18 +13,16 @@ export class StudentExtensionDataValidate implements PipeTransform<StudentExtend
 
     async transform(data: StudentExtendedDataPatch, metadata: ArgumentMetadata): Promise<StudentExtendedDataPatch> {
 
-
-        console.log('start')
         if (data.firstName.length < 1 || data.lastName.length < 1) {
             throw new NotAcceptableException(Error, 'należy podać imię i nazwisko');
         }
 
         const githubValidation = this.httpService.get(`https://github.com/repos/${data.githubUsername}`);
 
-        console.log('przeszło');
+        //'nie można znaleźć podanego konta w serwisie github'
 
         if (data.projectUrls.length < 1) {
-            throw new NotAcceptableException(Error, 'wymagane jest podanie url do projektu zaliczeniowego');
+            throw new NotAcceptableException(Error, 'wymagane jest podanie urli do projektu zaliczeniowego');
         }
 
         const expectedTypeWork = Object.values(ExpectedTypeWork);

@@ -50,7 +50,6 @@ export class HrController {
     @UseRole('recruiter')
     @UseGuards(AuthGuard)
     async pushBackStudent(
-        @UserObject() user: UserEntity,
         @Param('id') id: string
     ) {
         return await this.hrService.studentPushback(id);

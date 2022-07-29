@@ -48,53 +48,61 @@ export class HrService {
 
     async AddStudentToList(user: UserEntity, id: string): Promise<UserResponse> {
 
-        const HrUser = await HrEntity.findOne({
-            where: {
-                user: user as FindOptionsWhere<UserEntity>
-            },
-            relations: {
-                reservedStudents: true
+        try {
+            const HrUser = await HrEntity.findOne({
+                where: {
+                    user: user as FindOptionsWhere<UserEntity>
+                },
+                relations: {
+                    reservedStudents: true
+                }
+            })
+
+            const onList = HrUser.reservedStudents.length;
+            const maxCount = HrUser.maxReservedStudents;
+            const validator = maxCount >= onList;
+
+            if (!validator) {
+                return {
+                    actionStatus: false,
+                    message: 'Posiadasz już maksymalną dozwoloną liczbę kursantów do rozmowy'
+                }
             }
-        })
 
-        const onList = HrUser.reservedStudents.length;
-        const maxCount = HrUser.maxReservedStudents;
-        const validator = maxCount >= onList;
+            const student = await StudentEntity.findOne({
+                where: {
+                    id,
+                }
+            })
 
-        if (!validator) {
+            if (!student) {
+                return {
+                    actionStatus: false,
+                    message: 'Podany kursant nie istnieje w bazie'
+                }
+            }
+            if (student.reservationStatus !== UserStatus.AVAILABLE) {
+                return {
+                    actionStatus: false,
+                    message: 'Podany kursant jest już wybrany przez innego rekrutera'
+                }
+            }
+
+            student.hr = HrUser;
+            student.reservationStatus = UserStatus.DURING;
+
+            await student.save();
+
+            return {
+                actionStatus: true,
+                message: 'student dodany do rozmowy'
+            }
+        } catch (err) {
+            console.log(err)
             return {
                 actionStatus: false,
-                message: 'Posiadasz już maksymalną dozwoloną liczbę kursantów do rozmowy'
+                message: 'błąd serwera'
             }
-        }
-
-        const student = await StudentEntity.findOne({
-            where: {
-                id,
-            }
-        })
-
-        if (!student) {
-            return {
-                actionStatus: false,
-                message: 'Podany kursant nie istnieje w bazie'
-            }
-        }
-        if (student.reservationStatus !== UserStatus.AVAILABLE) {
-            return {
-                actionStatus: false,
-                message: 'Podany kursant jest już wybrany przez innego rekrutera'
-            }
-        }
-
-        student.hr = HrUser;
-        student.reservationStatus = UserStatus.DURING;
-
-        await student.save();
-
-        return {
-            actionStatus: true,
-            message: 'student dodany do rozmowy'
         }
     }
 

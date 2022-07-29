@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Res, UseFilters, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
 import { authLoginDto } from './dto/auth-login.dto';
@@ -8,6 +8,7 @@ import { AuthGuard } from '../guards/Auth.guard';
 import { UserEntity } from './user.entity';
 import { PassChange } from './dto/pass-change.dto';
 import { EmailChanging } from './dto/email-change.dto';
+import { UnauthorizedExceptionFilter } from 'src/filter/unauthorized.filter';
 
 @Controller('login')
 export class AuthController {
@@ -50,6 +51,7 @@ export class AuthController {
 
     @Get('/check')
     @UseGuards(AuthGuard)
+    @UseFilters(UnauthorizedExceptionFilter)
     async userLoginCheck(
         @UserObject() user: UserEntity,
     ) {
@@ -60,7 +62,7 @@ export class AuthController {
 
     }
 
-    @Post('/passchange')
+    @Patch('/passchange')
     @UseGuards(AuthGuard)
     async passwordChange(
         @UserObject() user: UserEntity,
@@ -70,7 +72,7 @@ export class AuthController {
         return await this.authService.passwordChanging(user, data, res)
     }
 
-    @Post('/emailchange')
+    @Patch('/emailchange')
     @UseGuards(AuthGuard)
     async emailChange(
         @Body() data: EmailChanging,
