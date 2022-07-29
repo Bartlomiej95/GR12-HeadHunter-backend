@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Inject, Param, Patch, Post, UploadedFiles, UseFilters, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { destionation } from 'src/multer/multer.storage';
-import {ChangeStudentStatusResponse, UploadeFileMulter } from 'src/types';
+import { StudentsSelectedByHrResponse, UploadeFileMulter} from 'src/types';
 import { FileTypeValidationPipe } from 'src/pipe/file-validation.pipe';
 import { AcceptableExceptionFilter } from 'src/filter/not-acceptable.filter';
 import { StudentService } from './student.service';
@@ -18,6 +18,15 @@ export class StudentController {
     constructor(
         @Inject(StudentService) private studentService: StudentService
     ) { }
+
+    @Get('/selected')
+    @UseRole('recruiter')
+    @UseGuards(AuthGuard)
+    async studentsSelectedByHr(
+        @UserObject() user: UserEntity,
+    ): Promise<StudentsSelectedByHrResponse>{
+        return await this.studentService.studentsSelectedByHr(user);
+    }
 
 
     @Post('/add')

@@ -14,6 +14,7 @@ import { studentFilter } from 'src/utils/student-filter';
 import { StudentExtendedData, StudentExtendedDataPatch } from './dto/extended-data.dto';
 import { FindOptionsWhere, Not } from 'typeorm';
 import { comparer } from 'src/auth/crypto';
+import { HrEntity } from 'src/hr/hr.entity';
 
 interface Progress {
     added: number;
@@ -269,5 +270,45 @@ export class StudentService {
             }
         }
 
+    }
+
+    async studentsSelectedByHr(user: UserEntity) {
+        try {
+            const hr = await HrEntity.findOne({
+                where: { 
+                    user: user as FindOptionsWhere<UserEntity>
+                },
+                relations: {
+                    reservedStudents: true
+                }
+                
+            });
+
+            if(!hr){
+                return {
+                    actionStatus: false,
+                    message: 'Nie istnieje w bazie HR o takim id',
+                }
+            }
+
+            const students = hr.reservedStudents;
+            if(!students){
+                return{
+                    actionStatus: false,
+                    message: 'Nie masz wybranych żadnych studentów',
+                }
+            }
+
+            return {
+                actionStatus: true,
+                message: students,
+            }
+        } catch(e) {
+            console.log(e);
+            return {
+                actionStatus: false,
+                message: 'błąd serwera',
+            }
+        }
     }
 }

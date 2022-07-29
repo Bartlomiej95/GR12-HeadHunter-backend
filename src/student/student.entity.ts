@@ -4,7 +4,7 @@ import { HrEntity } from "src/hr/hr.entity";
 import { rating } from "src/types";
 import { ExpectedContractType, ExpectedTypeWork } from "src/types/user/user.register.type";
 import { UserStatus } from "src/types/user/user.status";
-import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class StudentEntity extends BaseEntity {
@@ -120,5 +120,11 @@ export class StudentEntity extends BaseEntity {
     @OneToOne(() => UserEntity)
     @JoinColumn()
     user: UserEntity;
+
+    static findByHrId(hrId: string) {
+        return this.createQueryBuilder("student")
+            .where("student.hr = :hrId", { hrId })
+            .getMany()
+    }
 
 }
