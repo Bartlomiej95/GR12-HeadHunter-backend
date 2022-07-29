@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Inject, Param, Patch, Post, UploadedFiles, UseFilters, UseGuards, UseInterceptors, UsePipes } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { destionation } from 'src/multer/multer.storage';
-import { UploadeFileMulter } from 'src/types';
+import {ChangeStudentStatusResponse, UploadeFileMulter } from 'src/types';
 import { FileTypeValidationPipe } from 'src/pipe/file-validation.pipe';
 import { AcceptableExceptionFilter } from 'src/filter/not-acceptable.filter';
 import { StudentService } from './student.service';

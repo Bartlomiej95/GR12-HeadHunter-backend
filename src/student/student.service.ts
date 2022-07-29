@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { readFile, unlink } from 'fs/promises';
 import { Injectable } from '@nestjs/common';
-import { Role, UploadeFileMulter, UserImport, UserResponse } from 'src/types';
+import { Role, StudentCVResponse, UploadeFileMulter, UserImport, UserResponse } from 'src/types';
 import { destionation } from 'src/multer/multer.storage';
 import { studentDataValidator } from 'src/utils/student-validation';
 import { StudentEntity } from './student.entity';
@@ -9,10 +9,10 @@ import { UserEntity } from 'src/auth/user.entity';
 import { randomSigns } from 'src/utils/random-signs';
 import { safetyConfiguration } from 'config';
 import { sendActivationLink } from 'src/utils/email-handler';
-import { UserStatus } from 'src/types/user/user.status';
+import { UserStatus } from 'src/types';
+import { studentFilter } from 'src/utils/student-filter';
 import { StudentExtendedData, StudentExtendedDataPatch } from './dto/extended-data.dto';
 import { FindOptionsWhere, Not } from 'typeorm';
-import { studentFilter } from 'src/utils/student-filter';
 
 interface Progress {
     added: number;
@@ -55,7 +55,7 @@ export class StudentService {
 
                 await newStudent.save()
 
-                //await sendActivationLink(newUser.link, newUser.email, 'student') chwilowo wyłączam żeby nie przekroczyć limitu wysłanych maili przy testach
+                await sendActivationLink(newUser.link, newUser.email, 'student');
 
                 return true;
             } catch (err) {
@@ -263,5 +263,4 @@ export class StudentService {
         }
 
     }
-
 }

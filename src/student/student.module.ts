@@ -11,6 +11,7 @@ import { HttpModule } from '@nestjs/axios';
     })
   })],
   providers: [StudentService],
-  controllers: [StudentController]
+  controllers: [StudentController],
+  exports: [StudentService],
 })
 export class StudentModule {}
