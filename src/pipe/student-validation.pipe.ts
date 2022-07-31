@@ -1,8 +1,9 @@
 import { HttpService } from "@nestjs/axios";
+import { AxiosResponse } from "axios"
 import { ArgumentMetadata, Injectable, PipeTransform, NotAcceptableException } from "@nestjs/common";
 import { StudentExtendedDataPatch } from "src/student/dto/extended-data.dto";
 import { ExpectedContractType, ExpectedTypeWork } from "src/types/user/user.register.type";
-
+import { lastValueFrom, map, Observable } from 'rxjs';
 
 @Injectable()
 export class StudentExtensionDataValidate implements PipeTransform<StudentExtendedDataPatch, Promise<StudentExtendedDataPatch>> {
@@ -11,15 +12,22 @@ export class StudentExtensionDataValidate implements PipeTransform<StudentExtend
         private readonly httpService: HttpService
     ) { }
 
+    async getGithubUsername(userName: string): Promise<Observable<Object>> {
+        return lastValueFrom(this.httpService.get(`https://api.github.com/users/${userName}`)
+          .pipe(
+            map((res: AxiosResponse) => res.data))
+        ).catch(() => {
+            throw new NotAcceptableException(Error, 'Konto github o podanej nazwie użytkownika nie istnieje.')
+        });
+    }
+
     async transform(data: StudentExtendedDataPatch, metadata: ArgumentMetadata): Promise<StudentExtendedDataPatch> {
 
         if (data.firstName.length < 1 || data.lastName.length < 1) {
             throw new NotAcceptableException(Error, 'należy podać imię i nazwisko');
         }
 
-        const githubValidation = this.httpService.get(`https://github.com/repos/${data.githubUsername}`);
-
-        //'nie można znaleźć podanego konta w serwisie github'
+        await this.getGithubUsername(data.githubUsername);
 
         if (data.projectUrls.length < 1) {
             throw new NotAcceptableException(Error, 'wymagane jest podanie urli do projektu zaliczeniowego');
