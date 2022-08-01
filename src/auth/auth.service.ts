@@ -225,7 +225,7 @@ export class AuthService {
     async emailChanging(user: UserEntity, data: EmailChanging): Promise<UserResponse> {
 
         try {
-            const userValidation = comparer(data.password, user.hash, user.iv, user.salt)
+            const userValidation = await comparer(data.password, user.hash, user.iv, user.salt);
 
             if (!userValidation) {
                 return {
