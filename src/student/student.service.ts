@@ -50,7 +50,7 @@ export class StudentService {
 
                 newStudent.projectDegree = student.projectDegree;
                 newStudent.teamProjectDegree = student.teamProjectDegree;
-                newStudent.courseEngagment = student.courseEngagement;
+                newStudent.courseEngagment = student.courseEngagment;
                 newStudent.courseCompletion = student.courseCompletion;
                 newStudent.bonusProjectUrls = JSON.stringify(student.bonusProjectUrls);
                 newStudent.user = newUser;

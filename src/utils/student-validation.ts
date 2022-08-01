@@ -16,7 +16,7 @@ export const studentDataValidator = async (data: UserImport): Promise<boolean> =
         return false
     }
 
-    if (data.courseEngagement > 5 || data.courseEngagement < 1) {
+    if (data.courseEngagment > 5 || data.courseEngagment < 1) {
         return false
     }
 
