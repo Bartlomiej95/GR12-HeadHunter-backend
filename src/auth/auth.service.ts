@@ -48,6 +48,7 @@ export class AuthService {
     }
 
     async login(req: authLoginDto, res: Response): Promise<any> {
+
         try {
             const user = await UserEntity.findOne({
                 where: {
@@ -179,7 +180,7 @@ export class AuthService {
         }
     }
 
-    async passwordChanging(user: UserEntity, data: PassChange, res: Response): Promise<UserResponse> {
+    async passwordChanging(user: UserEntity, data: PassChange): Promise<UserResponse> {
 
         try {
             const passValidation = await comparer(data.oldPassword, user.hash, user.iv, user.salt);

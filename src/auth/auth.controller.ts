@@ -67,9 +67,8 @@ export class AuthController {
     async passwordChange(
         @UserObject() user: UserEntity,
         @Body() data: PassChange,
-        @Res() res: Response
     ) {
-        return await this.authService.passwordChanging(user, data, res)
+        return await this.authService.passwordChanging(user, data)
     }
 
     @Patch('/emailchange')

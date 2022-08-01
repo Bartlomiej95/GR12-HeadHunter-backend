@@ -25,7 +25,7 @@ export class StudentEntity extends BaseEntity {
     teamProjectDegree: rating;
 
     @Column({
-        type: 'text'
+        type: 'longtext'
     })
     bonusProjectUrls: string;
 
@@ -46,12 +46,12 @@ export class StudentEntity extends BaseEntity {
 
     @Column({
         default: null,
-        type: 'text'
+        type: 'longtext'
     })
     portfolioUrls: string | null;
 
     @Column({
-        type: 'text',
+        type: 'longtext',
         default: null
     })
     projectUrls: string | null;
