@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { readFile, unlink } from 'fs/promises';
 import { Injectable } from '@nestjs/common';
-import { Role, StudentCVResponse, UploadeFileMulter, UserImport, UserResponse } from 'src/types';
+import { Role, StudentCVResponse, StudentListResponse, UploadeFileMulter, UserImport, UserResponse } from 'src/types';
 import { destionation } from 'src/multer/multer.storage';
 import { studentDataValidator } from 'src/utils/student-validation';
 import { StudentEntity } from './student.entity';
@@ -10,7 +10,7 @@ import { randomSigns } from 'src/utils/random-signs';
 import { safetyConfiguration } from 'config';
 import { sendActivationLink } from 'src/utils/email-handler';
 import { UserStatus } from 'src/types';
-import { studentFilter } from 'src/utils/student-filter';
+import { studentFilter, studentListFilter } from 'src/utils/student-filter';
 import { StudentExtendedData, StudentExtendedDataPatch } from './dto/extended-data.dto';
 import { FindOptionsWhere, Not } from 'typeorm';
 import { comparer } from 'src/auth/crypto';
@@ -86,7 +86,7 @@ export class StudentService {
         return result;
     }
 
-    async getFreeStudnetList() {
+    async getFreeStudnetList(): Promise<StudentListResponse[]> {
         const result = await StudentEntity.find({
             where: {
                 reservationStatus: UserStatus.AVAILABLE,
@@ -98,23 +98,66 @@ export class StudentService {
         })
 
         const activeStudent = result.filter(student => student.user.isActive === true);
-        const toSend = activeStudent.map(student => ({ ...student, user: 'active' }))
+        const toSend = activeStudent.map(student => (studentListFilter(student)))
 
         return toSend;
     }
 
-    async getOneStudent(id: string): Promise<StudentEntity | null> {
+    async getOneStudent(id: string): Promise<StudentCVResponse | null> {
         const result = await StudentEntity.findOne({
             where: {
                 id,
                 areDataPatched: true
+            },
+            relations: {
+                user: true
             }
+
         })
 
         if (!result) return null;
 
         const data = studentFilter(result)
         return data;
+    }
+
+    async studentHiringAndBlocking(user: UserEntity): Promise<UserResponse> {
+
+        try {
+            const result = await StudentEntity.findOne({
+                where: {
+                    user: user as FindOptionsWhere<UserEntity>
+                }
+            });
+
+            if (!result) {
+                return {
+                    actionStatus: false,
+                    message: 'użytkownik nie istnieje w bazie',
+                }
+            }
+
+            result.areDataPatched = false;
+            result.reservationStatus = UserStatus.HIRED;
+
+            await result.save();
+
+            user.hash = null;
+            user.isActive = false;
+
+            await user.save();
+
+            return {
+                actionStatus: true,
+                message: 'kursant zatrudniony, konto zostanie trwale zablokowane',
+            }
+        } catch (err) {
+            console.log(err);
+            return {
+                actionStatus: false,
+                message: 'Błąd serwera',
+            }
+        }
     }
 
     async addStudentdata(data: StudentExtendedData): Promise<UserResponse> {
@@ -131,7 +174,7 @@ export class StudentService {
                 message: 'użytkownik nie istnieje w bazie',
             }
 
-            const passwordValid = comparer(data.password, user.hash, user.iv, user.salt);
+            const passwordValid = await comparer(data.password, user.hash, user.iv, user.salt);
 
             if (!passwordValid) return {
                 actionStatus: false,

@@ -19,6 +19,16 @@ export class StudentController {
         @Inject(StudentService) private studentService: StudentService
     ) { }
 
+
+    @Get('/hired')
+    @UseRole('student')
+    @UseGuards(AuthGuard)
+    async studentHired(
+        @UserObject() user: UserEntity,
+    ) {
+        return await this.studentService.studentHiringAndBlocking(user)
+    }
+
     @Get('/selected')
     @UseRole('recruiter')
     @UseGuards(AuthGuard)

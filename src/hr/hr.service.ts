@@ -1,6 +1,6 @@
 import {forwardRef, Inject, Injectable } from '@nestjs/common';
 import { safetyConfiguration } from 'config';
-import { AfterAddData, StudentCVResponse, UserResponse } from 'src/types';
+import { AfterAddData, UserResponse } from 'src/types';
 import { randomSigns } from 'src/utils/random-signs';
 import { HrDto } from './dto/hr-add.dto';
 import { HrEntity } from './hr.entity';
@@ -11,6 +11,7 @@ import { FindOptionsWhere } from 'typeorm';
 import { StudentEntity } from 'src/student/student.entity';
 import { UserStatus } from 'src/types/user/user.status';
 import { StudentService } from 'src/student/student.service';
+import { truncate } from 'fs/promises';
 
 @Injectable()
 export class HrService {
@@ -84,7 +85,7 @@ export class HrService {
             if (student.reservationStatus !== UserStatus.AVAILABLE) {
                 return {
                     actionStatus: false,
-                    message: 'Podany kursant jest już wybrany przez innego rekrutera'
+                    message: 'Podany kursant nie jest dostępny'
                 }
             }
 
@@ -106,12 +107,15 @@ export class HrService {
         }
     }
 
-    async studentPushback(id: string): Promise<UserResponse> {
+    async studentPushback(id: string, user: UserEntity): Promise<UserResponse> {
 
         try {
             const result = await StudentEntity.findOne({
                 where: {
                     id,
+                },
+                relations: {
+                    hr: true
                 }
             })
 
@@ -119,6 +123,19 @@ export class HrService {
                 return {
                     actionStatus: false,
                     message: 'Kursant o podanym id nie istnieje'
+                }
+            }
+
+            const hr = await HrEntity.findOne({
+                where: {
+                    user: user as FindOptionsWhere<UserEntity>
+                }
+            })
+
+            if (result.hr.id !== hr.id) {
+                return {
+                    actionStatus: false,
+                    message: 'Próba usunięcia kursanta innego rekrutera!'
                 }
             }
 

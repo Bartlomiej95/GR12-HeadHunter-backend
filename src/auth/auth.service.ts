@@ -66,7 +66,7 @@ export class AuthService {
             if (!user.isActive) {
                 return res.json({
                     logedIn: false,
-                    message: 'Konto nie jest jeszcze aktywne',
+                    message: 'Konto nie jest aktywne',
                 })
             }
 
