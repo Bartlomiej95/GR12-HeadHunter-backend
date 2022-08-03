@@ -1,5 +1,5 @@
 import { StudentEntity } from "src/student/student.entity";
-import { StudentCVResponse, StudentListResponse } from "src/types";
+import { HrStudentList, StudentCVResponse, StudentListResponse } from "src/types";
 
 export const studentFilter = (student: StudentEntity): StudentCVResponse => {
 
@@ -37,3 +37,31 @@ export const studentListFilter = (student: StudentEntity): StudentListResponse =
 
     return filteredData
 }
+
+
+export const listForHrFilter = async (student: StudentEntity): Promise<HrStudentList> => {
+    const reservationEnd = student.reservationEnd;
+    const id = student.id;
+
+    const result = await StudentEntity.findOne({
+        where: {
+            id: student.id
+        },
+        relations: {
+            user: true
+        }
+    })
+
+    if (!result) throw new Error('Can`t find student');
+
+    const firstName = result.user.firstName;
+    const lastName = result.user.lastName;
+
+    return {
+        id,
+        reservationEnd,
+        firstName,
+        lastName
+    }
+
+}   

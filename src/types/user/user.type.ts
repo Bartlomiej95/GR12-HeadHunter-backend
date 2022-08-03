@@ -11,5 +11,5 @@ export interface Code {
 
 export interface UserResponse {
   actionStatus: boolean;
-  message: string;
+  message: any;
 }

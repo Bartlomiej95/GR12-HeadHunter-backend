@@ -17,7 +17,7 @@ import { UserEntity } from 'src/auth/user.entity';
 import { randomSigns } from 'src/utils/random-signs';
 import { safetyConfiguration } from 'config';
 import { sendActivationLink } from 'src/utils/email-handler';
-import { studentFilter, studentListFilter } from 'src/utils/student-filter';
+import { listForHrFilter, studentFilter, studentListFilter } from 'src/utils/student-filter';
 import {
   StudentExtendedData,
   StudentExtendedDataPatch,
@@ -66,7 +66,8 @@ export class StudentService {
         );
       }
       return true;
-    } catch {
+    } catch (err) {
+      console.log(err)
       return false;
     }
   }
@@ -373,7 +374,7 @@ export class StudentService {
     }
   }
 
-  async studentsSelectedByHr(user: UserEntity) {
+  async studentsSelectedByHr(user: UserEntity): Promise<UserResponse> {
     try {
       const hr = await HrEntity.findOne({
         where: {
@@ -391,7 +392,8 @@ export class StudentService {
         };
       }
 
-      const students = hr.reservedStudents;
+      const students = hr.reservedStudents
+
       if (!students) {
         return {
           actionStatus: false,
@@ -399,9 +401,11 @@ export class StudentService {
         };
       }
 
+      const data = await Promise.all(students.map(async (student) => await listForHrFilter(student)))
+
       return {
         actionStatus: true,
-        message: students,
+        message: data,
       };
     } catch (e) {
       console.log(e);
