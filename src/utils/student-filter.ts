@@ -22,7 +22,7 @@ export const studentListFilter = (student: StudentEntity): StudentListResponse =
     const filteredData = {
         id: student.id,
         firstName: student.user.firstName,
-        lastName: student.user.lastName,
+        lastName: student.user.lastName[0] + '.',
         courseCompletion: student.courseCompletion,
         courseEngagment: student.courseEngagment,
         projectDegree: student.projectDegree,
