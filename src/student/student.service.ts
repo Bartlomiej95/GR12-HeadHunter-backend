@@ -17,7 +17,7 @@ import { UserEntity } from 'src/auth/user.entity';
 import { randomSigns } from 'src/utils/random-signs';
 import { safetyConfiguration } from 'config';
 import { sendActivationLink } from 'src/utils/email-handler';
-import { listForHrFilter, studentFilter, studentListFilter } from 'src/utils/student-filter';
+import { availabeForPatchStudentData, listForHrFilter, studentFilter, studentListFilter } from 'src/utils/student-filter';
 import {
   StudentExtendedData,
   StudentExtendedDataPatch,
@@ -413,6 +413,29 @@ export class StudentService {
         actionStatus: false,
         message: 'błąd serwera',
       };
+    }
+  }
+
+  async getLogedStudentData(user: UserEntity): Promise<StudentExtendedDataPatch | string> {
+    try {
+      const student = await StudentEntity.findOne({
+        where: {
+          user: user as FindOptionsWhere<UserEntity>
+        },
+        relations: {
+          user: true
+        }
+      });
+
+      if (!student) return 'Błąd podczas wczytywania danych kursanta';
+
+      const data = availabeForPatchStudentData(student);
+
+      return data
+
+    } catch (err) {
+      console.log(err)
+      return 'Błąd serwera'
     }
   }
 }

@@ -1,3 +1,4 @@
+import { StudentExtendedDataPatch } from "src/student/dto/extended-data.dto";
 import { StudentEntity } from "src/student/student.entity";
 import { HrStudentList, StudentCVResponse, StudentListResponse } from "src/types";
 
@@ -65,3 +66,26 @@ export const listForHrFilter = async (student: StudentEntity): Promise<HrStudent
     }
 
 }   
+
+export const availabeForPatchStudentData = (student: StudentEntity): StudentExtendedDataPatch => {
+    const response = {
+        tel: student.tel,
+        firstName: student.user.firstName,
+        lastName: student.user.lastName,
+        githubUsername: student.githubUsername,
+        portfolioUrls: JSON.parse(student.portfolioUrls),
+        projectUrls: JSON.parse(student.projectUrls),
+        bio: student.bio,
+        expectedTypeWork: student.expectedTypeWork,
+        targetWorkCity: student.targetWorkCity,
+        expectedContractType: student.expectedContractType,
+        expectedSalary: student.expectedSalary,
+        canTakeApprenticeship: student.canTakeApprenticeship,
+        monthsOfCommercialExp: student.monthsOfCommercialExp,
+        education: student.education,
+        workExperience: student.workExperience,
+        courses: student.courses
+    }
+
+    return response
+}

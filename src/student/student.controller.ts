@@ -101,8 +101,18 @@ export class StudentController {
       };
     }
   }
+  @Get('/data')
+  @UseRole('student')
+  @UseGuards(AuthGuard)
+  async getStudentData(
+    @UserObject() user: UserEntity
+  ) {
+    return await this.studentService.getLogedStudentData(user)
+  }
+
 
   @Get('getone/:id')
+  @UseRole('recruiter')
   @UseGuards(AuthGuard)
   async getStudnetforCV(@Param('id') id: string) {
     try {
