@@ -34,6 +34,7 @@ interface Progress {
 
 @Injectable()
 export class StudentService {
+
   async removeReservation(): Promise<boolean> {
     try {
       const result = await StudentEntity.find({
