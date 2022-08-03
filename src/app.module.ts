@@ -9,6 +9,7 @@ import { RateLimiterConfiguration } from 'config';
 import { AuthModule } from './auth/auth.module';
 import { HrModule } from './hr/hr.module';
 import { StudentModule } from './student/student.module';
+import { CronModule } from './cron/cron.module';
 
 @Module({
   imports: [
@@ -16,14 +17,16 @@ import { StudentModule } from './student/student.module';
     ThrottlerModule.forRoot(RateLimiterConfiguration),
     AuthModule,
     HrModule,
-    StudentModule
+    StudentModule,
+    CronModule,
   ],
   controllers: [AppController],
-  providers: [AppService,
+  providers: [
+    AppService,
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard
-    }
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}
