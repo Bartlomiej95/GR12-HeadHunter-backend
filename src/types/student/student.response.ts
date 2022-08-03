@@ -55,10 +55,3 @@ export interface StudentListResponse {
     canTakeApprenticeship: boolean;
     monthsOfCommercialExp: number;
 }
-
-export interface HrStudentList {
-    id: string;
-    firstName: string;
-    lastName: string;
-    reservationEnd: Date;
-}

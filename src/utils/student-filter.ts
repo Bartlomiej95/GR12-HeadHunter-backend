@@ -1,6 +1,6 @@
 import { StudentExtendedDataPatch } from "src/student/dto/extended-data.dto";
 import { StudentEntity } from "src/student/student.entity";
-import { HrStudentList, StudentCVResponse, StudentListResponse } from "src/types";
+import { StudentCVResponse, StudentListResponse } from "src/types";
 
 export const studentFilter = (student: StudentEntity): StudentCVResponse => {
 
@@ -40,9 +40,7 @@ export const studentListFilter = (student: StudentEntity): StudentListResponse =
 }
 
 
-export const listForHrFilter = async (student: StudentEntity): Promise<HrStudentList> => {
-    const reservationEnd = student.reservationEnd;
-    const id = student.id;
+export const listForHrFilter = async (student: StudentEntity): Promise<StudentCVResponse> => {
 
     const result = await StudentEntity.findOne({
         where: {
@@ -55,15 +53,18 @@ export const listForHrFilter = async (student: StudentEntity): Promise<HrStudent
 
     if (!result) throw new Error('Can`t find student');
 
-    const firstName = result.user.firstName;
-    const lastName = result.user.lastName;
-
-    return {
-        id,
-        reservationEnd,
-        firstName,
-        lastName
+    const filteredData = {
+        ...result,
+        portfolioUrls: JSON.parse(result.portfolioUrls),
+        projectUrls: JSON.parse(result.projectUrls),
+        bonusProjectUrls: JSON.parse(result.bonusProjectUrls),
+        firstName: result.user.firstName,
+        lastName: result.user.lastName,
+        email: result.user.email,
+        user: 'active',
     }
+
+    return filteredData;
 
 }   
 
