@@ -1,4 +1,5 @@
 import { UserEntity } from 'src/auth/user.entity';
+import { HrMsgEntity } from 'src/hr/hr-msg.entity';
 import { HrEntity } from 'src/hr/hr.entity';
 import { rating } from 'src/types';
 import {
@@ -135,6 +136,11 @@ export class StudentEntity extends BaseEntity {
   @OneToOne(() => UserEntity)
   @JoinColumn()
   user: UserEntity;
+
+  @OneToOne(
+      type => HrMsgEntity,
+  )
+  hrMsg: HrMsgEntity;
 
   static findByHrId(hrId: string) {
     return this.createQueryBuilder('student')
