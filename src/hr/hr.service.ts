@@ -213,9 +213,39 @@ export class HrService {
       hrMsg.hr = hr;
       hrMsg.student = student;
 
+      await hrMsg.save();
+
       return {
         actionStatus: true,
         message: 'Kursant został zatrudniony przez HR',
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        actionStatus: false,
+        message: 'Błąd serwera',
+      };
+    }
+  }
+
+  async getMessages() {
+    try {
+      const messages = await HrMsgEntity.find({
+        relations: ['hr', 'student', 'hr.user', 'student.user'],
+      });
+
+      const resData = messages.map(item => {
+        return {
+          msg: `W dniu: ${item.hiredAt.toDateString()},` +
+         ` rekruter: ${item.hr.user.firstName} ${item.hr.user.lastName} z firmy: ${item.hr.company},` +
+         ` zatrudnił studenta MegaK: ${item.student.user.firstName} ${item.student.user.lastName}`,
+          isRead: item.isRead,
+      }
+      });
+
+      return {
+        actionStatus: true,
+        data: resData,
       };
     } catch (err) {
       console.log(err);
