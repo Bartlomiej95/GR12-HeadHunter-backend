@@ -66,4 +66,11 @@ export class HrController {
         return await this.hrService.hireStudent(id, recruiter);
     }
 
+    @Get('/message')
+    @UseRole('admin')
+    @UseGuards(AuthGuard)
+    async getMessages() {
+        return await this.hrService.getMessages();
+    }
+
 }
