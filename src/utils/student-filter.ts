@@ -5,14 +5,36 @@ import { StudentCVResponse, StudentListResponse } from "src/types";
 export const studentFilter = (student: StudentEntity): StudentCVResponse => {
 
     const filtredStudent = {
-        ...student,
-        portfolioUrls: JSON.parse(student.portfolioUrls),
-        projectUrls: JSON.parse(student.projectUrls),
-        bonusProjectUrls: JSON.parse(student.bonusProjectUrls),
+        id: student.id,
+        email: student.user.email,
+        courseCompletion: student.courseCompletion,
+        courseEngagment: student.courseEngagment,
+        projectDegree: student.projectDegree,
+        teamProjectDegree: student.teamProjectDegree,
+        bonusProjectUrls: student.bonusProjectUrls
+            ? JSON.parse(student.bonusProjectUrls)
+            : student.bonusProjectUrls,
+        tel: student.tel,
         firstName: student.user.firstName,
         lastName: student.user.lastName,
-        email: student.user.email,
-        user: 'active'
+        githubUsername: student.githubUsername,
+        portfolioUrls: student.portfolioUrls
+            ? JSON.parse(student.portfolioUrls)
+            : student.portfolioUrls,
+        projectUrls: student.projectUrls
+            ? JSON.parse(student.projectUrls)
+            : student.projectUrls,
+        bio: student.bio,
+        expectedTypeWork: student.expectedTypeWork,
+        targetWorkCity: student.targetWorkCity,
+        expectedContractType: student.expectedContractType,
+        expectedSalary: student.expectedSalary,
+        canTakeApprenticeship: student.canTakeApprenticeship,
+        monthsOfCommercialExp: student.monthsOfCommercialExp,
+        education: student.education,
+        workExperience: student.workExperience,
+        courses: student.courses,
+        hr: null,
     }
 
     return filtredStudent;
@@ -55,9 +77,15 @@ export const listForHrFilter = async (student: StudentEntity): Promise<StudentCV
 
     const filteredData = {
         ...result,
-        portfolioUrls: JSON.parse(result.portfolioUrls),
-        projectUrls: JSON.parse(result.projectUrls),
-        bonusProjectUrls: JSON.parse(result.bonusProjectUrls),
+        portfolioUrls: result.portfolioUrls
+            ? JSON.parse(result.portfolioUrls)
+            : result.portfolioUrls,
+        projectUrls: result.projectUrls
+            ? JSON.parse(result.projectUrls)
+            : result.projectUrls,
+        bonusProjectUrls: result.bonusProjectUrls
+            ? JSON.parse(result.bonusProjectUrls)
+            : result.bonusProjectUrls,
         firstName: result.user.firstName,
         lastName: result.user.lastName,
         email: result.user.email,
@@ -74,8 +102,12 @@ export const availabeForPatchStudentData = (student: StudentEntity): StudentExte
         firstName: student.user.firstName,
         lastName: student.user.lastName,
         githubUsername: student.githubUsername,
-        portfolioUrls: JSON.parse(student.portfolioUrls),
-        projectUrls: JSON.parse(student.projectUrls),
+        portfolioUrls: student.portfolioUrls
+            ? JSON.parse(student.portfolioUrls)
+            : student.portfolioUrls,
+        projectUrls: student.projectUrls
+            ? JSON.parse(student.projectUrls)
+            : student.projectUrls,
         bio: student.bio,
         expectedTypeWork: student.expectedTypeWork,
         targetWorkCity: student.targetWorkCity,
