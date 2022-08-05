@@ -170,9 +170,7 @@ export class HrService {
         where: {
           id,
         },
-        relations: {
-          hr: true,
-        },
+        relations: ['hr', 'user'],
       });
 
       if (!student) {
@@ -188,10 +186,17 @@ export class HrService {
         },
       });
 
+      if (!student.hr) {
+        return {
+          actionStatus: false,
+          message: 'Próba zatrudnienia kursanta nie wybranego przez rekrutera!',
+        };
+      }
+
       if (student.hr.id !== hr.id) {
         return {
           actionStatus: false,
-          message: 'Próba zatrudnienia kursanta innego rekrutera!',
+          message: 'Próba zatrudnienia kursanta wybranego przez innego rekrutera!',
         };
       }
 
@@ -205,6 +210,7 @@ export class HrService {
       student.reservationStatus = UserStatus.HIRED;
       student.reservationEnd = null;
       student.hr = null;
+      student.user.isActive = false;
 
       await student.save();
 
@@ -237,8 +243,8 @@ export class HrService {
       const resData = messages.map(item => {
         return {
           msg: `W dniu: ${item.hiredAt.toDateString()},` +
-         ` rekruter: ${item.hr.user.firstName} ${item.hr.user.lastName} z firmy: ${item.hr.company},` +
-         ` zatrudnił studenta MegaK: ${item.student.user.firstName} ${item.student.user.lastName}`,
+         ` rekruter: ${item.hr.user.firstName} ${item.hr.user.lastName} z firmy: ${item.hr.company}, (e-mail: ${item.hr.user.email}),` +
+         ` zatrudnił studenta MegaK: ${item.student.user.firstName} ${item.student.user.lastName}, (e-mail: ${item.student.user.email})`,
           isRead: item.isRead,
       }
       });
