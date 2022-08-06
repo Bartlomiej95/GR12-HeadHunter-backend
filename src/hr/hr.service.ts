@@ -213,6 +213,7 @@ export class HrService {
       student.user.isActive = false;
 
       await student.save();
+      await student.user.save();
 
       //sent msg to admin
       const hrMsg = new HrMsgEntity();
