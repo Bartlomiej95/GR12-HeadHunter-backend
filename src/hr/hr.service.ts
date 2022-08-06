@@ -12,6 +12,7 @@ import { StudentEntity } from 'src/student/student.entity';
 import { UserStatus } from 'src/types/user/user.status';
 import { StudentService } from 'src/student/student.service';
 import { truncate } from 'fs/promises';
+import { HrMsgEntity } from './hr-msg.entity';
 
 @Injectable()
 export class HrService {
@@ -153,6 +154,105 @@ export class HrService {
       return {
         actionStatus: true,
         message: 'Kursant nie jest już na rozmowie',
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        actionStatus: false,
+        message: 'Błąd serwera',
+      };
+    }
+  }
+
+  async hireStudent(id: string, recruiter: UserEntity): Promise<UserResponse> {
+    try {
+      const student = await StudentEntity.findOne({
+        where: {
+          id,
+        },
+        relations: ['hr', 'user'],
+      });
+
+      if (!student) {
+        return {
+          actionStatus: false,
+          message: 'Kursant o podanym id nie istnieje',
+        };
+      }
+
+      const hr = await HrEntity.findOne({
+        where: {
+          user: recruiter as FindOptionsWhere<UserEntity>,
+        },
+      });
+
+      if (!student.hr) {
+        return {
+          actionStatus: false,
+          message: 'Próba zatrudnienia kursanta nie wybranego przez rekrutera!',
+        };
+      }
+
+      if (student.hr.id !== hr.id) {
+        return {
+          actionStatus: false,
+          message: 'Próba zatrudnienia kursanta wybranego przez innego rekrutera!',
+        };
+      }
+
+      if(student.reservationStatus !== UserStatus.DURING) {
+        return {
+          actionStatus: false,
+          message: 'Próba zatrudnienia przez rekrutera kursanta którego nie ma na liście "Do rozmowy"!',
+        };
+      }
+
+      student.reservationStatus = UserStatus.HIRED;
+      student.reservationEnd = null;
+      student.hr = null;
+      student.user.isActive = false;
+
+      await student.save();
+      await student.user.save();
+
+      //sent msg to admin
+      const hrMsg = new HrMsgEntity();
+      hrMsg.hr = hr;
+      hrMsg.student = student;
+
+      await hrMsg.save();
+
+      return {
+        actionStatus: true,
+        message: 'Kursant został zatrudniony przez HR',
+      };
+    } catch (err) {
+      console.log(err);
+      return {
+        actionStatus: false,
+        message: 'Błąd serwera',
+      };
+    }
+  }
+
+  async getMessages() {
+    try {
+      const messages = await HrMsgEntity.find({
+        relations: ['hr', 'student', 'hr.user', 'student.user'],
+      });
+
+      const resData = messages.map(item => {
+        return {
+          msg: `W dniu: ${item.hiredAt.toDateString()},` +
+         ` rekruter: ${item.hr.user.firstName} ${item.hr.user.lastName} z firmy: ${item.hr.company}, (e-mail: ${item.hr.user.email}),` +
+         ` zatrudnił studenta MegaK: ${item.student.user.firstName} ${item.student.user.lastName}, (e-mail: ${item.student.user.email})`,
+          isRead: item.isRead,
+      }
+      });
+
+      return {
+        actionStatus: true,
+        data: resData,
       };
     } catch (err) {
       console.log(err);

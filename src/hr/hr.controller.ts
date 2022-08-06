@@ -56,4 +56,21 @@ export class HrController {
         return await this.hrService.studentPushback(id, user);
     }
 
+    @Get('/hirestudent/:id')
+    @UseRole('recruiter')
+    @UseGuards(AuthGuard)
+    async hireStudent(
+        @Param('id') id: string,
+        @UserObject() recruiter: UserEntity
+    ) {
+        return await this.hrService.hireStudent(id, recruiter);
+    }
+
+    @Get('/message')
+    @UseRole('admin')
+    @UseGuards(AuthGuard)
+    async getMessages() {
+        return await this.hrService.getMessages();
+    }
+
 }
