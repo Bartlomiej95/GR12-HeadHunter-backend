@@ -1,6 +1,6 @@
 import { UserEntity } from 'src/auth/user.entity';
-import { HrMsgEntity } from 'src/hr/hr-msg.entity';
 import { HrEntity } from 'src/hr/hr.entity';
+import { HrMsgEntity } from 'src/hr/hr-msg.entity';
 import { rating } from 'src/types';
 import {
   ExpectedContractType,
@@ -22,16 +22,24 @@ export class StudentEntity extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({
+    type: 'tinyint',
+  })
   courseCompletion: rating;
 
-  @Column()
+  @Column({
+    type: 'tinyint',
+  })
   courseEngagment: rating;
 
-  @Column()
+  @Column({
+    type: 'tinyint',
+  })
   projectDegree: rating;
 
-  @Column()
+  @Column({
+    type: 'tinyint',
+  })
   teamProjectDegree: rating;
 
   @Column({
@@ -45,11 +53,15 @@ export class StudentEntity extends BaseEntity {
   areDataPatched: boolean;
 
   @Column({
+    type: 'varchar',
+    length: 15,
     default: null,
   })
   tel: string | null;
 
   @Column({
+    type: 'varchar',
+    length: 39,
     default: null,
   })
   githubUsername: string | null;
@@ -72,21 +84,29 @@ export class StudentEntity extends BaseEntity {
   bio: string | null;
 
   @Column({
+    type: 'enum',
+    enum: ExpectedContractType,
     default: null,
   })
   expectedContractType: ExpectedContractType | null;
 
   @Column({
+    type: 'varchar',
+    length: 100,
     default: null,
   })
   targetWorkCity: string | null;
 
   @Column({
+    type: 'enum',
+    enum: ExpectedTypeWork,
     default: null,
   })
   expectedTypeWork: ExpectedTypeWork | null;
 
   @Column({
+    type: 'varchar',
+    length: 8,
     default: null,
   })
   expectedSalary: string | null;
@@ -97,6 +117,7 @@ export class StudentEntity extends BaseEntity {
   canTakeApprenticeship: boolean | null;
 
   @Column({
+    type: 'tinyint',
     default: null,
   })
   monthsOfCommercialExp: number | null;
@@ -120,6 +141,8 @@ export class StudentEntity extends BaseEntity {
   courses: string | null;
 
   @Column({
+    type: 'enum',
+    enum: UserStatus,
     default: UserStatus.AVAILABLE,
   })
   reservationStatus: UserStatus;
@@ -137,9 +160,7 @@ export class StudentEntity extends BaseEntity {
   @JoinColumn()
   user: UserEntity;
 
-  @OneToOne(
-      type => HrMsgEntity,
-  )
+  @OneToOne((type) => HrMsgEntity)
   hrMsg: HrMsgEntity;
 
   static findByHrId(hrId: string) {
