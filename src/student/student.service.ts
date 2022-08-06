@@ -1,6 +1,6 @@
-import * as path from 'path';
-import { readFile, unlink } from 'fs/promises';
-import { Injectable } from '@nestjs/common';
+import * as path from "path";
+import { readFile, unlink } from "fs/promises";
+import { forwardRef, Inject, Injectable } from "@nestjs/common";
 import {
   Role,
   StudentCVResponse,
@@ -8,23 +8,27 @@ import {
   UploadeFileMulter,
   UserImport,
   UserResponse,
-  UserStatus,
-} from 'src/types';
-import { destionation } from 'src/multer/multer.storage';
-import { studentDataValidator } from 'src/utils/student-validation';
-import { StudentEntity } from './student.entity';
-import { UserEntity } from 'src/auth/user.entity';
-import { randomSigns } from 'src/utils/random-signs';
-import { safetyConfiguration } from 'config';
-import { sendActivationLink } from 'src/utils/email-handler';
-import { availabeForPatchStudentData, listForHrFilter, studentFilter, studentListFilter } from 'src/utils/student-filter';
+  UserStatus
+} from "src/types";
+import { destionation } from "src/multer/multer.storage";
+import { studentDataValidator } from "src/utils/student-validation";
+import { StudentEntity } from "./student.entity";
+import { UserEntity } from "src/auth/user.entity";
+import { randomSigns } from "src/utils/random-signs";
+import { safetyConfiguration } from "config";
+import { sendActivationLink } from "src/utils/email-handler";
 import {
-  StudentExtendedData,
-  StudentExtendedDataPatch,
-} from './dto/extended-data.dto';
-import { FindOptionsWhere, LessThan, Not } from 'typeorm';
-import { comparer } from 'src/auth/crypto';
-import { HrEntity } from 'src/hr/hr.entity';
+  availabeForPatchStudentData,
+  listForHrFilter,
+  studentFilter,
+  studentListFilter
+} from "src/utils/student-filter";
+import { StudentExtendedData, StudentExtendedDataPatch } from "./dto/extended-data.dto";
+import { FindOptionsWhere, LessThan, Not } from "typeorm";
+import { comparer } from "src/auth/crypto";
+import { HrEntity } from "src/hr/hr.entity";
+import { MailService } from "../mail/mail.service";
+import { reservationReminder } from "../templates/email/reservation-reminder-date";
 
 interface Progress {
   added: number;
@@ -34,6 +38,10 @@ interface Progress {
 
 @Injectable()
 export class StudentService {
+  constructor(
+    @Inject(forwardRef(() => MailService)) private mailService: MailService,
+  ) {
+  }
 
   async removeReservation(): Promise<boolean> {
     try {
@@ -437,5 +445,21 @@ export class StudentService {
       console.log(err)
       return 'Błąd serwera'
     }
+  }
+
+  async sendReminder() {
+    const currentDateInMilSecs = +new Date();
+    const studentsWithIncomingReservation = await StudentEntity.find({
+      select: ['reservationEnd'],
+      where: {
+        reservationEnd: LessThan(new Date(currentDateInMilSecs + (60 * 60 * 24 * 100 * 2))),
+        reservationStatus: UserStatus.DURING,
+      },
+      relations: ['user'],
+    });
+
+    studentsWithIncomingReservation.map(async ({ reservationEnd, user: { email } }) => {
+      await this.mailService.sendMail(email, 'Data spotkania', reservationReminder(reservationEnd))
+    })
   }
 }

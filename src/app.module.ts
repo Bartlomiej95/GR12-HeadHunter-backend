@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { HrModule } from './hr/hr.module';
 import { StudentModule } from './student/student.module';
 import { CronModule } from './cron/cron.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { CronModule } from './cron/cron.module';
     HrModule,
     StudentModule,
     CronModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [
