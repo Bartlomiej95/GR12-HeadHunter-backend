@@ -50,7 +50,7 @@ export class UserEntity extends BaseEntity {
 
   @Column({
     type: 'varchar',
-    length: 700,
+    length: 36,
     default: null,
   })
   jwt: string | null;
