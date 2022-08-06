@@ -14,7 +14,7 @@ export class CronService {
     await this.StudentService.removeReservation();
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_DAY_AT_7AM)
   async sendReminderToStudents() {
     await this.StudentService.sendReminder();
   }
