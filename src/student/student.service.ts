@@ -1,6 +1,6 @@
-import * as path from "path";
-import { readFile, unlink } from "fs/promises";
-import { forwardRef, Inject, Injectable } from "@nestjs/common";
+import * as path from 'path';
+import { readFile, unlink } from 'fs/promises';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   Role,
   StudentCVResponse,
@@ -8,27 +8,30 @@ import {
   UploadeFileMulter,
   UserImport,
   UserResponse,
-  UserStatus
-} from "src/types";
-import { destionation } from "src/multer/multer.storage";
-import { studentDataValidator } from "src/utils/student-validation";
-import { StudentEntity } from "./student.entity";
-import { UserEntity } from "src/auth/user.entity";
-import { randomSigns } from "src/utils/random-signs";
-import { safetyConfiguration } from "config";
-import { sendActivationLink } from "src/utils/email-handler";
+  UserStatus,
+} from 'src/types';
+import { destionation } from 'src/multer/multer.storage';
+import { studentDataValidator } from 'src/utils/student-validation';
+import { StudentEntity } from './student.entity';
+import { UserEntity } from 'src/auth/user.entity';
+import { randomSigns } from 'src/utils/random-signs';
+import { safetyConfiguration } from 'config';
+import { sendActivationLink } from 'src/utils/email-handler';
 import {
   availabeForPatchStudentData,
   listForHrFilter,
   studentFilter,
-  studentListFilter
-} from "src/utils/student-filter";
-import { StudentExtendedData, StudentExtendedDataPatch } from "./dto/extended-data.dto";
-import { FindOptionsWhere, LessThan, Not } from "typeorm";
-import { comparer } from "src/auth/crypto";
-import { HrEntity } from "src/hr/hr.entity";
-import { MailService } from "../mail/mail.service";
-import { reservationReminder } from "../templates/email/reservation-reminder-date";
+  studentListFilter,
+} from 'src/utils/student-filter';
+import {
+  StudentExtendedData,
+  StudentExtendedDataPatch,
+} from './dto/extended-data.dto';
+import { FindOptionsWhere, LessThan, Not } from 'typeorm';
+import { comparer } from 'src/auth/crypto';
+import { HrEntity } from 'src/hr/hr.entity';
+import { MailService } from '../mail/mail.service';
+import { reservationReminder } from '../templates/email/reservation-reminder-date';
 
 interface Progress {
   added: number;
@@ -40,8 +43,7 @@ interface Progress {
 export class StudentService {
   constructor(
     @Inject(forwardRef(() => MailService)) private mailService: MailService,
-  ) {
-  }
+  ) {}
 
   async removeReservation(): Promise<boolean> {
     try {
@@ -75,7 +77,7 @@ export class StudentService {
       }
       return true;
     } catch (err) {
-      console.log(err)
+      console.log(err);
       return false;
     }
   }
@@ -400,7 +402,7 @@ export class StudentService {
         };
       }
 
-      const students = hr.reservedStudents
+      const students = hr.reservedStudents;
 
       if (!students) {
         return {
@@ -409,7 +411,9 @@ export class StudentService {
         };
       }
 
-      const data = await Promise.all(students.map(async (student) => await listForHrFilter(student)))
+      const data = await Promise.all(
+        students.map(async (student) => await listForHrFilter(student)),
+      );
 
       return {
         actionStatus: true,
@@ -424,42 +428,56 @@ export class StudentService {
     }
   }
 
-  async getLogedStudentData(user: UserEntity): Promise<StudentExtendedDataPatch | string> {
+  async getLogedStudentData(
+    user: UserEntity,
+  ): Promise<StudentExtendedDataPatch | string> {
     try {
       const student = await StudentEntity.findOne({
         where: {
-          user: user as FindOptionsWhere<UserEntity>
+          user: user as FindOptionsWhere<UserEntity>,
         },
         relations: {
-          user: true
-        }
+          user: true,
+        },
       });
 
       if (!student) return 'Błąd podczas wczytywania danych kursanta';
 
       const data = availabeForPatchStudentData(student);
 
-      return data
-
+      return data;
     } catch (err) {
-      console.log(err)
-      return 'Błąd serwera'
+      console.log(err);
+      return 'Błąd serwera';
     }
   }
 
   async sendReminder() {
-    const currentDateInMilSecs = +new Date();
-    const studentsWithIncomingReservation = await StudentEntity.find({
-      select: ['reservationEnd'],
-      where: {
-        reservationEnd: LessThan(new Date(currentDateInMilSecs + (60 * 60 * 24 * 100 * 2))),
-        reservationStatus: UserStatus.DURING,
-      },
-      relations: ['user'],
-    });
+    try {
+      const data = new Date();
+      const checkData =
+        data.getDay() === 5 ? new Date(data.setDate(data.getDate() + 2)) : data;
+      const studentsWithIncomingReservation = await StudentEntity.find({
+        select: ['reservationEnd'],
+        where: {
+          reservationEnd: LessThan(checkData),
+          reservationStatus: UserStatus.DURING,
+        },
+        relations: ['user'],
+      });
 
-    studentsWithIncomingReservation.map(async ({ reservationEnd, user: { email } }) => {
-      await this.mailService.sendMail(email, 'Data spotkania', reservationReminder(reservationEnd))
-    })
+      studentsWithIncomingReservation.map(
+        async ({ reservationEnd, user: { email } }) => {
+          await this.mailService.sendMail(
+            email,
+            'Data spotkania',
+            reservationReminder(reservationEnd),
+          );
+        },
+      );
+    } catch (err) {
+      console.log(err);
+      return 'Błąd serwera';
+    }
   }
 }

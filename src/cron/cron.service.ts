@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Cron, CronExpression } from "@nestjs/schedule";
+import { Cron } from '@nestjs/schedule';
 import { StudentService } from 'src/student/student.service';
 
 @Injectable()
@@ -14,7 +14,10 @@ export class CronService {
     await this.StudentService.removeReservation();
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_7AM)
+  @Cron('0 7 * * 1-5', {
+    name: 'changeStudentStatus',
+    timeZone: 'Europe/Paris',
+  })
   async sendReminderToStudents() {
     await this.StudentService.sendReminder();
   }
