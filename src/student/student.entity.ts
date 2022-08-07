@@ -85,7 +85,7 @@ export class StudentEntity extends BaseEntity {
   @Column({
     type: 'enum',
     enum: ExpectedContractType,
-    default: null,
+    default: ExpectedContractType.IRRELEVANT,
   })
   expectedContractType: ExpectedContractType | null;
 
@@ -99,7 +99,7 @@ export class StudentEntity extends BaseEntity {
   @Column({
     type: 'enum',
     enum: ExpectedTypeWork,
-    default: null,
+    default: ExpectedTypeWork.IRRELEVANT,
   })
   expectedTypeWork: ExpectedTypeWork | null;
 

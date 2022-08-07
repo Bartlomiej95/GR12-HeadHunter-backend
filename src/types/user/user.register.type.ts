@@ -1,16 +1,15 @@
 export enum ExpectedTypeWork {
-  AT_LOCATION = 'atLocation',
-  CHANGE_OF_LOCATION = 'changeoflocation',
-  MANUAL = 'manual',
-  IRRELEVANT = 'irrelevant',
-  NO_MATTER = 'no matter'
+  AT_LOCATION = 'atLocation', //praca na miejscu
+  CHANGE_OF_LOCATION = 'changeOfLocation', //Gotowość do przeprowadzki
+  MANUAL = 'manual', //Wyłącznie zdalnie
+  IRRELEVANT = 'irrelevant', //Bez znaczenia (domyślnie)
 }
 
 export enum ExpectedContractType {
-  UoP = 'UoP',
-  B2B = 'B2B',
-  UZ_UoD = 'UZ/UoD',
-  IRRELEVANT = 'irrelevant',
+  UoP = 'UoP', //Tylko UoP
+  B2B = 'B2B', //Możliwe B2B
+  UZ_UoD = 'UZ/UoD', //Możliwe UZ/UoD
+  IRRELEVANT = 'irrelevant', //Brak preferencji (domyślnie)
 }
 
 export interface UserRegisterType {
