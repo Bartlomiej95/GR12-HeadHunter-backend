@@ -10,7 +10,7 @@ export const safetyConfiguration = {
   iterations: 24,
   saltLength: 30,
   linkLength: 30,
-  cookieExpires: 60 * 60 * 24,
+  cookieExpires: 1000 * 60 * 60 * 24,
 };
 
 export const frontConfiguration = {
