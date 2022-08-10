@@ -133,19 +133,56 @@ export class HrService {
 
   async studentPushback(id: string, user: UserEntity): Promise<UserResponse> {
     try {
-      const result = await StudentReservationEntity.delete({
-        idHr: user.id,
-        idStudent: id,
+      const HrUser = await HrEntity.findOne({
+        select: ['id', 'maxReservedStudents', 'StudentReservation'],
+        where: {
+          user: user as FindOptionsWhere<UserEntity>,
+        },
+      });
+
+      if (!HrUser) {
+        return {
+          actionStatus: false,
+          message: 'HR nie posiada żadnych rozmów',
+        };
+      }
+
+      const student = await StudentEntity.findOne({
+        select: ['id'],
+        where: {
+          id,
+        },
+
+        relations: {
+          StudentReservation: true,
+        },
+      });
+
+      if (!HrUser) {
+        return {
+          actionStatus: false,
+          message: 'Student nie istnieje',
+        };
+      }
+      const result = await StudentReservationEntity.findOne({
+        select: ['id'],
+        where: {
+          idHr: HrUser as FindOptionsWhere<HrEntity>,
+          idStudent: student as FindOptionsWhere<StudentEntity>,
+        },
       });
 
       if (!result) {
         return {
           actionStatus: false,
-          message: 'Kursant o podanym id nie istnieje',
+          message: 'Dany student nie był na rozmowie z tobą',
         };
       }
 
-      await result;
+      await StudentReservationEntity.delete({
+        id: result.id,
+      });
+
       return {
         actionStatus: true,
         message: 'Kursant nie jest już na rozmowie',
