@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { readFile, unlink } from 'fs/promises';
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   Role,
   StudentCVResponse,
@@ -30,8 +30,6 @@ import {
 import { FindOptionsWhere, LessThan, Not } from 'typeorm';
 import { comparer } from 'src/auth/crypto';
 import { HrEntity } from 'src/hr/hr.entity';
-import { MailService } from '../mail/mail.service';
-import { reservationReminder } from '../templates/email/reservation-reminder-date';
 
 interface Progress {
   added: number;
@@ -41,9 +39,7 @@ interface Progress {
 
 @Injectable()
 export class StudentService {
-  constructor(
-    @Inject(forwardRef(() => MailService)) private mailService: MailService,
-  ) {}
+  constructor() {}
 
   async removeReservation(): Promise<boolean> {
     try {
@@ -454,30 +450,26 @@ export class StudentService {
 
   async sendReminder() {
     try {
-      const data = new Date();
-      const checkData =
-        data.getDay() === 5 ? new Date(data.setDate(data.getDate() + 2)) : data;
-      const studentsWithIncomingReservation = await StudentEntity.find({
-        select: ['reservationEnd'],
-        where: {
-          reservationEnd: LessThan(checkData),
-          reservationStatus: UserStatus.DURING,
-        },
-        relations: ['user'],
-      });
+        const data = new Date();
+        const checkData =
+            data.getDay() === 5 ? new Date(data.setDate(data.getDate() + 2)) : data;
+        const studentsWithIncomingReservation = await StudentEntity.find({
+            select: ['reservationEnd'],
+            where: {
+                reservationEnd: LessThan(checkData),
+                reservationStatus: UserStatus.DURING,
+            },
+            relations: ['user'],
+        });
 
-      studentsWithIncomingReservation.map(
-        async ({ reservationEnd, user: { email } }) => {
-          await this.mailService.sendMail(
-            email,
-            'Data spotkania',
-            reservationReminder(reservationEnd),
-          );
-        },
-      );
+        studentsWithIncomingReservation.map(
+            async ({ reservationEnd, user: { email } }) => {
+                await reservationReminder(reservationEnd, email);
+            },
+        );
     } catch (err) {
-      console.log(err);
-      return 'Błąd serwera';
+        console.log(err);
+        return 'Błąd serwera';
     }
   }
 }

@@ -1,8 +1,7 @@
-import { forwardRef, Module } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { StudentService } from './student.service';
 import { StudentController } from './student.controller';
 import { HttpModule } from '@nestjs/axios';
-import { MailModule } from "../mail/mail.module";
 
 @Module({
   imports: [
@@ -12,7 +11,6 @@ import { MailModule } from "../mail/mail.module";
         maxRedirects: 5,
       }),
     }),
-    forwardRef(() => MailModule),
   ],
   providers: [StudentService],
   controllers: [StudentController],

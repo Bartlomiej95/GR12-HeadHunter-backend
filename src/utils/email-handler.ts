@@ -49,3 +49,19 @@ export const sendResetLink = async (link: string, userMail: string): Promise<voi
         throw new Error('error during mail sending')
     }
 }
+
+export const reservationReminder = async (date: Date, userMail: string): Promise<void> => {
+    const mail = {
+        from: emailConfiguration.mailCli,
+        to: `<${userMail}>`,
+        subject: 'Data spotkania',
+        text: `Przypominamy o umówionym spotkaniu, które odbywa się ${date}.`
+    };
+
+    try {
+        await transporter.sendMail(mail)
+    } catch (err) {
+        console.log(err);
+        throw new Error('error during mail sending')
+    }
+}
