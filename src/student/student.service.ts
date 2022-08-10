@@ -17,14 +17,19 @@ import { UserEntity } from 'src/auth/user.entity';
 import { randomSigns } from 'src/utils/random-signs';
 import { safetyConfiguration } from 'config';
 import { sendActivationLink } from 'src/utils/email-handler';
-import { availabeForPatchStudentData, listForHrFilter, studentFilter, studentListFilter } from 'src/utils/student-filter';
+import {
+  availabeForPatchStudentData,
+  listForHrFilter,
+  studentFilter,
+  studentListFilter,
+} from 'src/utils/student-filter';
 import {
   StudentExtendedData,
   StudentExtendedDataPatch,
 } from './dto/extended-data.dto';
-import { FindOptionsWhere, LessThan, Not } from 'typeorm';
+import { FindOptionsWhere, In, LessThan, Not } from 'typeorm';
 import { comparer } from 'src/auth/crypto';
-import { HrEntity } from 'src/hr/hr.entity';
+import { StudentReservationEntity } from './reservation.entity';
 
 interface Progress {
   added: number;
@@ -34,10 +39,9 @@ interface Progress {
 
 @Injectable()
 export class StudentService {
-
   async removeReservation(): Promise<boolean> {
     try {
-      const result = await StudentEntity.find({
+      const result = await StudentReservationEntity.find({
         select: ['id'],
         where: {
           reservationEnd: LessThan(new Date()),
@@ -58,7 +62,7 @@ export class StudentService {
       };
 
       for (const value of result) {
-        await StudentEntity.update(
+        await StudentReservationEntity.update(
           {
             id: value.id,
           },
@@ -67,7 +71,7 @@ export class StudentService {
       }
       return true;
     } catch (err) {
-      console.log(err)
+      console.log(err);
       return false;
     }
   }
@@ -143,7 +147,6 @@ export class StudentService {
   async getFreeStudnetList(): Promise<StudentListResponse[]> {
     const result = await StudentEntity.find({
       where: {
-        reservationStatus: UserStatus.AVAILABLE,
         areDataPatched: true,
       },
       relations: {
@@ -179,6 +182,7 @@ export class StudentService {
   async studentHiringAndBlocking(user: UserEntity): Promise<UserResponse> {
     try {
       const result = await StudentEntity.findOne({
+        select: ['areDataPatched'],
         where: {
           user: user as FindOptionsWhere<UserEntity>,
         },
@@ -191,11 +195,16 @@ export class StudentService {
         };
       }
 
+      await StudentReservationEntity.update(
+        {
+          idStudent: user.id,
+        },
+        {
+          reservationStatus: UserStatus.HIRED,
+        },
+      );
+
       result.areDataPatched = false;
-      result.reservationStatus = UserStatus.HIRED;
-
-      await result.save();
-
       user.hash = null;
       user.isActive = false;
 
@@ -376,32 +385,32 @@ export class StudentService {
 
   async studentsSelectedByHr(user: UserEntity): Promise<UserResponse> {
     try {
-      const hr = await HrEntity.findOne({
+      const hrSelected = await StudentReservationEntity.find({
+        select: ['idStudent'],
         where: {
-          user: user as FindOptionsWhere<UserEntity>,
+          idHr: user.id,
         },
         relations: {
-          reservedStudents: true,
+          idStudent: true,
         },
       });
 
-      if (!hr) {
-        return {
-          actionStatus: false,
-          message: 'Nie istnieje w bazie HR o takim id',
-        };
-      }
-
-      const students = hr.reservedStudents
-
-      if (!students) {
+      if (!hrSelected) {
         return {
           actionStatus: false,
           message: 'Nie masz wybranych żadnych studentów',
         };
       }
 
-      const data = await Promise.all(students.map(async (student) => await listForHrFilter(student)))
+      const student = await StudentEntity.find({
+        where: {
+          id: In(hrSelected),
+        },
+      });
+
+      const data = await Promise.all(
+        student.map(async (student) => await listForHrFilter(student)),
+      );
 
       return {
         actionStatus: true,
@@ -416,26 +425,27 @@ export class StudentService {
     }
   }
 
-  async getLogedStudentData(user: UserEntity): Promise<StudentExtendedDataPatch | string> {
+  async getLogedStudentData(
+    user: UserEntity,
+  ): Promise<StudentExtendedDataPatch | string> {
     try {
       const student = await StudentEntity.findOne({
         where: {
-          user: user as FindOptionsWhere<UserEntity>
+          user: user as FindOptionsWhere<UserEntity>,
         },
         relations: {
-          user: true
-        }
+          user: true,
+        },
       });
 
       if (!student) return 'Błąd podczas wczytywania danych kursanta';
 
       const data = availabeForPatchStudentData(student);
 
-      return data
-
+      return data;
     } catch (err) {
-      console.log(err)
-      return 'Błąd serwera'
+      console.log(err);
+      return 'Błąd serwera';
     }
   }
 }

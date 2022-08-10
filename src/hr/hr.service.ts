@@ -11,8 +11,8 @@ import { FindOptionsWhere } from 'typeorm';
 import { StudentEntity } from 'src/student/student.entity';
 import { UserStatus } from 'src/types/user/user.status';
 import { StudentService } from 'src/student/student.service';
-import { truncate } from 'fs/promises';
 import { HrMsgEntity } from './hr-msg.entity';
+import { StudentReservationEntity } from '../student/reservation.entity';
 
 @Injectable()
 export class HrService {
@@ -56,15 +56,16 @@ export class HrService {
   async AddStudentToList(user: UserEntity, id: string): Promise<UserResponse> {
     try {
       const HrUser = await HrEntity.findOne({
+        select: ['id', 'maxReservedStudents', 'StudentReservation'],
         where: {
           user: user as FindOptionsWhere<UserEntity>,
         },
         relations: {
-          reservedStudents: true,
+          StudentReservation: true,
         },
       });
 
-      const onList = HrUser.reservedStudents.length;
+      const onList = HrUser.StudentReservation.length;
       const maxCount = HrUser.maxReservedStudents;
       const validator = maxCount >= onList;
 
@@ -75,10 +76,14 @@ export class HrService {
             'Posiadasz już maksymalną dozwoloną liczbę kursantów do rozmowy',
         };
       }
-
       const student = await StudentEntity.findOne({
+        select: ['id'],
         where: {
           id,
+        },
+
+        relations: {
+          StudentReservation: true,
         },
       });
 
@@ -88,18 +93,27 @@ export class HrService {
           message: 'Podany kursant nie istnieje w bazie',
         };
       }
-      if (student.reservationStatus !== UserStatus.AVAILABLE) {
+      const studentReservation = await StudentReservationEntity.find({
+        select: ['id'],
+        where: {
+          idHr: user.id,
+          idStudent: id,
+        },
+      });
+
+      if (!!studentReservation) {
         return {
           actionStatus: false,
-          message: 'Podany kursant nie jest dostępny',
+          message: 'Podany kursant już jest zarejestrowany przez ciebie',
         };
       }
+      const newStudentReservation = new StudentReservationEntity();
+      newStudentReservation.idHr = HrUser.id;
+      newStudentReservation.idStudent = student.id;
+      newStudentReservation.reservationStatus = UserStatus.DURING;
+      newStudentReservation.reservationEnd = this.addDays();
 
-      student.hr = HrUser;
-      student.reservationStatus = UserStatus.DURING;
-      student.reservationEnd = this.addDays();
-
-      await student.save();
+      await newStudentReservation.save();
 
       return {
         actionStatus: true,
@@ -116,13 +130,9 @@ export class HrService {
 
   async studentPushback(id: string, user: UserEntity): Promise<UserResponse> {
     try {
-      const result = await StudentEntity.findOne({
-        where: {
-          id,
-        },
-        relations: {
-          hr: true,
-        },
+      const result = await StudentReservationEntity.delete({
+        idHr: user.id,
+        idStudent: id,
       });
 
       if (!result) {
@@ -132,25 +142,7 @@ export class HrService {
         };
       }
 
-      const hr = await HrEntity.findOne({
-        where: {
-          user: user as FindOptionsWhere<UserEntity>,
-        },
-      });
-
-      if (result.hr.id !== hr.id) {
-        return {
-          actionStatus: false,
-          message: 'Próba usunięcia kursanta innego rekrutera!',
-        };
-      }
-
-      result.reservationStatus = UserStatus.AVAILABLE;
-      result.reservationEnd = null;
-      result.hr = null;
-
-      await result.save();
-
+      await result;
       return {
         actionStatus: true,
         message: 'Kursant nie jest już na rozmowie',
@@ -167,10 +159,10 @@ export class HrService {
   async hireStudent(id: string, recruiter: UserEntity): Promise<UserResponse> {
     try {
       const student = await StudentEntity.findOne({
+        select: ['id', 'StudentReservation'],
         where: {
           id,
         },
-        relations: ['hr', 'user'],
       });
 
       if (!student) {
@@ -181,35 +173,29 @@ export class HrService {
       }
 
       const hr = await HrEntity.findOne({
+        select: ['id'],
         where: {
           user: recruiter as FindOptionsWhere<UserEntity>,
         },
       });
 
-      if (!student.hr) {
+      const studentReservation = await StudentReservationEntity.findOne({
+        select: ['id', 'reservationStatus'],
+        where: {
+          idHr: hr.id,
+          idStudent: student.id,
+        },
+      });
+
+      if (!studentReservation) {
         return {
           actionStatus: false,
           message: 'Próba zatrudnienia kursanta nie wybranego przez rekrutera!',
         };
       }
 
-      if (student.hr.id !== hr.id) {
-        return {
-          actionStatus: false,
-          message: 'Próba zatrudnienia kursanta wybranego przez innego rekrutera!',
-        };
-      }
-
-      if(student.reservationStatus !== UserStatus.DURING) {
-        return {
-          actionStatus: false,
-          message: 'Próba zatrudnienia przez rekrutera kursanta którego nie ma na liście "Do rozmowy"!',
-        };
-      }
-
-      student.reservationStatus = UserStatus.HIRED;
-      student.reservationEnd = null;
-      student.hr = null;
+      studentReservation.reservationStatus = UserStatus.HIRED;
+      studentReservation.reservationEnd = null;
       student.user.isActive = false;
 
       await student.save();
@@ -241,13 +227,14 @@ export class HrService {
         relations: ['hr', 'student', 'hr.user', 'student.user'],
       });
 
-      const resData = messages.map(item => {
+      const resData = messages.map((item) => {
         return {
-          msg: `W dniu: ${item.hiredAt.toDateString()},` +
-         ` rekruter: ${item.hr.user.firstName} ${item.hr.user.lastName} z firmy: ${item.hr.company}, (e-mail: ${item.hr.user.email}),` +
-         ` zatrudnił studenta MegaK: ${item.student.user.firstName} ${item.student.user.lastName}, (e-mail: ${item.student.user.email})`,
+          msg:
+            `W dniu: ${item.hiredAt.toDateString()},` +
+            ` rekruter: ${item.hr.user.firstName} ${item.hr.user.lastName} z firmy: ${item.hr.company}, (e-mail: ${item.hr.user.email}),` +
+            ` zatrudnił studenta MegaK: ${item.student.user.firstName} ${item.student.user.lastName}, (e-mail: ${item.student.user.email})`,
           isRead: item.isRead,
-      }
+        };
       });
 
       return {

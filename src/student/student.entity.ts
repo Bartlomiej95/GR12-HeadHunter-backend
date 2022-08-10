@@ -1,21 +1,20 @@
 import { UserEntity } from 'src/auth/user.entity';
-import { HrEntity } from 'src/hr/hr.entity';
 import { HrMsgEntity } from 'src/hr/hr-msg.entity';
 import { rating } from 'src/types';
 import {
   ExpectedContractType,
   ExpectedTypeWork,
 } from 'src/types/user/user.register.type';
-import { UserStatus } from 'src/types/user/user.status';
 import {
   BaseEntity,
   Column,
   Entity,
   JoinColumn,
-  ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { StudentReservationEntity } from './reservation.entity';
 
 @Entity()
 export class StudentEntity extends BaseEntity {
@@ -140,27 +139,14 @@ export class StudentEntity extends BaseEntity {
   })
   courses: string | null;
 
-  @Column({
-    type: 'enum',
-    enum: UserStatus,
-    default: UserStatus.AVAILABLE,
-  })
-  reservationStatus: UserStatus;
-
-  @Column({
-    type: 'date',
-    default: null,
-  })
-  reservationEnd: Date | null;
-
-  @ManyToOne(() => HrEntity, (hr) => hr.reservedStudents)
-  hr: HrEntity | null;
+  @OneToMany(() => StudentReservationEntity, (student) => student.idStudent)
+  StudentReservation: StudentReservationEntity[];
 
   @OneToOne(() => UserEntity)
   @JoinColumn()
   user: UserEntity;
 
-  @OneToOne((type) => HrMsgEntity)
+  @OneToOne(() => HrMsgEntity)
   hrMsg: HrMsgEntity;
 
   static findByHrId(hrId: string) {
