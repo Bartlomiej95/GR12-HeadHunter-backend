@@ -199,7 +199,7 @@ export class HrService {
   async hireStudent(id: string, recruiter: UserEntity): Promise<UserResponse> {
     try {
       const student = await StudentEntity.findOne({
-        select: ['id', 'StudentReservation'],
+        select: ['id'],
         where: {
           id,
         },
@@ -219,27 +219,35 @@ export class HrService {
         },
       });
 
-      const studentReservation = await StudentReservationEntity.findOne({
-        select: ['id', 'reservationStatus'],
+      const result = await StudentReservationEntity.findOne({
+        select: ['id'],
         where: {
-          idHr: hr.id,
-          idStudent: student.id,
+          idHr: hr as FindOptionsWhere<HrEntity>,
+          idStudent: student as FindOptionsWhere<StudentEntity>,
+          reservationStatus: UserStatus.DURING,
         },
       });
 
-      if (!studentReservation) {
+      if (!result) {
         return {
           actionStatus: false,
           message: 'Próba zatrudnienia kursanta nie wybranego przez rekrutera!',
         };
       }
 
-      studentReservation.reservationStatus = UserStatus.HIRED;
-      studentReservation.reservationEnd = null;
-      student.user.isActive = false;
+      await StudentReservationEntity.update(
+        {
+          idStudent: student as FindOptionsWhere<StudentEntity>,
+          idHr: hr as FindOptionsWhere<HrEntity>,
+        },
+        {
+          reservationStatus: UserStatus.HIRED,
+          reservationEnd: null,
+        },
+      );
 
+      student.user.isActive = false;
       await student.save();
-      await student.user.save();
 
       //sent msg to admin
       const hrMsg = new HrMsgEntity();
