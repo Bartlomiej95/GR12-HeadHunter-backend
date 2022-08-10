@@ -30,6 +30,7 @@ import {
 import { FindOptionsWhere, In, LessThan, Not } from 'typeorm';
 import { comparer } from 'src/auth/crypto';
 import { StudentReservationEntity } from './reservation.entity';
+import { HrEntity } from '../hr/hr.entity';
 
 interface Progress {
   added: number;
@@ -385,26 +386,34 @@ export class StudentService {
 
   async studentsSelectedByHr(user: UserEntity): Promise<UserResponse> {
     try {
-      const hrSelected = await StudentReservationEntity.find({
-        select: ['idStudent'],
+      const HrUser = await HrEntity.findOne({
+        select: ['id'],
         where: {
-          idHr: user.id,
+          user: user as FindOptionsWhere<UserEntity>,
+        },
+      });
+
+      const hrSelected = await StudentReservationEntity.find({
+        select: ['id'],
+        where: {
+          idHr: HrUser as FindOptionsWhere<HrEntity>,
         },
         relations: {
           idStudent: true,
         },
       });
 
-      if (!hrSelected) {
+      const hrTable = hrSelected.map((key) => key.idStudent);
+
+      if (!hrTable) {
         return {
           actionStatus: false,
           message: 'Nie masz wybranych żadnych studentów',
         };
       }
-
       const student = await StudentEntity.find({
         where: {
-          id: In(hrSelected),
+          id: In(hrTable),
         },
       });
 
