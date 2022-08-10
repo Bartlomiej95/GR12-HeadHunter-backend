@@ -57,7 +57,7 @@ export class AuthController {
     ) {
         return {
             logedIn: true,
-            message: { role: user.role, firstName: user.firstName, lasyName: user.lastName },
+            message: { role: user.role, firstName: user.firstName, lastName: user.lastName },
         }
 
     }
