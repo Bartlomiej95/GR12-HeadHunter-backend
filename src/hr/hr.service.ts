@@ -67,7 +67,7 @@ export class HrService {
 
       const onList = HrUser.StudentReservation.length;
       const maxCount = HrUser.maxReservedStudents;
-      const validator = maxCount >= onList;
+      const validator = maxCount > onList;
 
       if (!validator) {
         return {
@@ -86,18 +86,21 @@ export class HrService {
           StudentReservation: true,
         },
       });
-
       if (!student) {
         return {
           actionStatus: false,
           message: 'Podany kursant nie istnieje w bazie',
         };
       }
-      const studentReservation = await StudentReservationEntity.find({
+      const studentReservation = await StudentReservationEntity.findOne({
         select: ['id'],
         where: {
-          idHr: user.id,
-          idStudent: id,
+          idHr: HrUser as FindOptionsWhere<HrEntity>,
+          idStudent: student as FindOptionsWhere<StudentEntity>,
+        },
+        relations: {
+          idHr: true,
+          idStudent: true,
         },
       });
 
