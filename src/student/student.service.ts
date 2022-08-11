@@ -54,21 +54,10 @@ export class StudentService {
         return true;
       }
 
-      const changeDate: {
-        reservationEnd: null;
-        reservationStatus: UserStatus;
-      } = {
-        reservationStatus: UserStatus.AVAILABLE,
-        reservationEnd: null,
-      };
-
       for (const value of result) {
-        await StudentReservationEntity.update(
-          {
-            id: value.id,
-          },
-          changeDate,
-        );
+        await StudentReservationEntity.delete({
+          id: value.id,
+        });
       }
       return true;
     } catch (err) {
