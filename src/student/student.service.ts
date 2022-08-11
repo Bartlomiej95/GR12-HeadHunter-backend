@@ -17,14 +17,20 @@ import { UserEntity } from 'src/auth/user.entity';
 import { randomSigns } from 'src/utils/random-signs';
 import { safetyConfiguration } from 'config';
 import { sendActivationLink } from 'src/utils/email-handler';
-import { availabeForPatchStudentData, listForHrFilter, studentFilter, studentListFilter } from 'src/utils/student-filter';
+import {
+  availabeForPatchStudentData,
+  listForHrFilter,
+  studentFilter,
+  studentListFilter,
+} from 'src/utils/student-filter';
 import {
   StudentExtendedData,
   StudentExtendedDataPatch,
 } from './dto/extended-data.dto';
-import { FindOptionsWhere, LessThan, Not } from 'typeorm';
+import { FindOptionsWhere, In, LessThan, Not } from 'typeorm';
 import { comparer } from 'src/auth/crypto';
-import { HrEntity } from 'src/hr/hr.entity';
+import { StudentReservationEntity } from './reservation.entity';
+import { HrEntity } from '../hr/hr.entity';
 
 interface Progress {
   added: number;
@@ -34,10 +40,9 @@ interface Progress {
 
 @Injectable()
 export class StudentService {
-
   async removeReservation(): Promise<boolean> {
     try {
-      const result = await StudentEntity.find({
+      const result = await StudentReservationEntity.find({
         select: ['id'],
         where: {
           reservationEnd: LessThan(new Date()),
@@ -49,25 +54,14 @@ export class StudentService {
         return true;
       }
 
-      const changeDate: {
-        reservationEnd: null;
-        reservationStatus: UserStatus;
-      } = {
-        reservationStatus: UserStatus.AVAILABLE,
-        reservationEnd: null,
-      };
-
       for (const value of result) {
-        await StudentEntity.update(
-          {
-            id: value.id,
-          },
-          changeDate,
-        );
+        await StudentReservationEntity.delete({
+          id: value.id,
+        });
       }
       return true;
     } catch (err) {
-      console.log(err)
+      console.log(err);
       return false;
     }
   }
@@ -143,7 +137,6 @@ export class StudentService {
   async getFreeStudnetList(): Promise<StudentListResponse[]> {
     const result = await StudentEntity.find({
       where: {
-        reservationStatus: UserStatus.AVAILABLE,
         areDataPatched: true,
       },
       relations: {
@@ -179,6 +172,7 @@ export class StudentService {
   async studentHiringAndBlocking(user: UserEntity): Promise<UserResponse> {
     try {
       const result = await StudentEntity.findOne({
+        select: ['areDataPatched'],
         where: {
           user: user as FindOptionsWhere<UserEntity>,
         },
@@ -191,11 +185,16 @@ export class StudentService {
         };
       }
 
+      await StudentReservationEntity.update(
+        {
+          idStudent: user.id,
+        },
+        {
+          reservationStatus: UserStatus.HIRED,
+        },
+      );
+
       result.areDataPatched = false;
-      result.reservationStatus = UserStatus.HIRED;
-
-      await result.save();
-
       user.hash = null;
       user.isActive = false;
 
@@ -376,32 +375,40 @@ export class StudentService {
 
   async studentsSelectedByHr(user: UserEntity): Promise<UserResponse> {
     try {
-      const hr = await HrEntity.findOne({
+      const HrUser = await HrEntity.findOne({
+        select: ['id'],
         where: {
           user: user as FindOptionsWhere<UserEntity>,
         },
+      });
+
+      const hrSelected = await StudentReservationEntity.find({
+        select: ['id'],
+        where: {
+          idHr: HrUser as FindOptionsWhere<HrEntity>,
+        },
         relations: {
-          reservedStudents: true,
+          idStudent: true,
         },
       });
 
-      if (!hr) {
-        return {
-          actionStatus: false,
-          message: 'Nie istnieje w bazie HR o takim id',
-        };
-      }
+      const hrTable = hrSelected.map((key) => key.idStudent);
 
-      const students = hr.reservedStudents
-
-      if (!students) {
+      if (!hrTable) {
         return {
           actionStatus: false,
           message: 'Nie masz wybranych żadnych studentów',
         };
       }
+      const student = await StudentEntity.find({
+        where: {
+          id: In(hrTable),
+        },
+      });
 
-      const data = await Promise.all(students.map(async (student) => await listForHrFilter(student)))
+      const data = await Promise.all(
+        student.map(async (student) => await listForHrFilter(student)),
+      );
 
       return {
         actionStatus: true,
@@ -416,26 +423,27 @@ export class StudentService {
     }
   }
 
-  async getLogedStudentData(user: UserEntity): Promise<StudentExtendedDataPatch | string> {
+  async getLogedStudentData(
+    user: UserEntity,
+  ): Promise<StudentExtendedDataPatch | string> {
     try {
       const student = await StudentEntity.findOne({
         where: {
-          user: user as FindOptionsWhere<UserEntity>
+          user: user as FindOptionsWhere<UserEntity>,
         },
         relations: {
-          user: true
-        }
+          user: true,
+        },
       });
 
       if (!student) return 'Błąd podczas wczytywania danych kursanta';
 
       const data = availabeForPatchStudentData(student);
 
-      return data
-
+      return data;
     } catch (err) {
-      console.log(err)
-      return 'Błąd serwera'
+      console.log(err);
+      return 'Błąd serwera';
     }
   }
 }

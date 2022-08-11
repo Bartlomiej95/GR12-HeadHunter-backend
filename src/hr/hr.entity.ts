@@ -1,5 +1,4 @@
 import { UserEntity } from 'src/auth/user.entity';
-import { StudentEntity } from 'src/student/student.entity';
 import {
   BaseEntity,
   Column,
@@ -10,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { HrMsgEntity } from './hr-msg.entity';
+import { StudentReservationEntity } from '../student/reservation.entity';
 
 @Entity()
 export class HrEntity extends BaseEntity {
@@ -27,13 +27,13 @@ export class HrEntity extends BaseEntity {
   })
   maxReservedStudents: number;
 
-  @OneToMany(() => StudentEntity, (student) => student.hr)
-  reservedStudents: StudentEntity[];
+  @OneToMany(() => StudentReservationEntity, (student) => student.idHr)
+  StudentReservation: StudentReservationEntity[];
 
   @OneToOne(() => UserEntity)
   @JoinColumn()
   user: UserEntity;
 
-  @OneToMany((type) => HrMsgEntity, (entity) => entity.hr)
+  @OneToMany(() => HrMsgEntity, (entity) => entity.hr)
   hrMsg: HrMsgEntity;
 }
