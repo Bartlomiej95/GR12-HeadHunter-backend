@@ -5,6 +5,7 @@ import {
   Role,
   StudentCVResponse,
   StudentListResponse,
+  StudentPagination,
   UploadeFileMulter,
   UserImport,
   UserResponse,
@@ -17,7 +18,12 @@ import { UserEntity } from 'src/auth/user.entity';
 import { randomSigns } from 'src/utils/random-signs';
 import { safetyConfiguration } from 'config';
 import { sendActivationLink } from 'src/utils/email-handler';
-import { availabeForPatchStudentData, listForHrFilter, studentFilter, studentListFilter } from 'src/utils/student-filter';
+import {
+  availabeForPatchStudentData,
+  listForHrFilter,
+  studentFilter,
+  studentListFilter,
+} from 'src/utils/student-filter';
 import {
   StudentExtendedData,
   StudentExtendedDataPatch,
@@ -25,6 +31,7 @@ import {
 import { FindOptionsWhere, LessThan, Not } from 'typeorm';
 import { comparer } from 'src/auth/crypto';
 import { HrEntity } from 'src/hr/hr.entity';
+import objectContaining = jasmine.objectContaining;
 
 interface Progress {
   added: number;
@@ -34,7 +41,6 @@ interface Progress {
 
 @Injectable()
 export class StudentService {
-
   async removeReservation(): Promise<boolean> {
     try {
       const result = await StudentEntity.find({
@@ -67,7 +73,7 @@ export class StudentService {
       }
       return true;
     } catch (err) {
-      console.log(err)
+      console.log(err);
       return false;
     }
   }
@@ -140,23 +146,43 @@ export class StudentService {
     return result;
   }
 
-  async getFreeStudnetList(): Promise<StudentListResponse[]> {
-    const result = await StudentEntity.find({
-      where: {
-        reservationStatus: UserStatus.AVAILABLE,
-        areDataPatched: true,
-      },
+  async getFreeStudnetList(
+    query: StudentPagination,
+  ): Promise<{ data: StudentListResponse[]; count: number }> {
+    const take = query.take || 9999; //zmienić na 10, jeśli paginacja się przyjmie na froncie
+    const skip = query.page ? take * (query.page - 1) : 0;
+    const sortBy = {};
+    if (query.sort) {
+      if (query.sort === 'firstName' || query.sort === 'lastName') {
+        sortBy['user'] = {
+          [query.sort]: query.sortBy || '',
+        };
+      } else {
+        sortBy[query.sort] = query.sortBy || '';
+      }
+    }
+    const [result, count] = await StudentEntity.findAndCount({
       relations: {
         user: true,
       },
+      where: {
+        reservationStatus: UserStatus.AVAILABLE,
+        areDataPatched: true,
+        user: {
+          isActive: true,
+        },
+      },
+      order: sortBy,
+      take: take,
+      skip: skip,
     });
 
-    const activeStudent = result.filter(
-      (student) => student.user.isActive === true,
-    );
-    const toSend = activeStudent.map((student) => studentListFilter(student));
+    const toSend = result.map((student) => studentListFilter(student));
 
-    return toSend;
+    return {
+      data: toSend,
+      count: count,
+    };
   }
 
   async getOneStudent(id: string): Promise<StudentCVResponse | null> {
@@ -392,7 +418,7 @@ export class StudentService {
         };
       }
 
-      const students = hr.reservedStudents
+      const students = hr.reservedStudents;
 
       if (!students) {
         return {
@@ -401,7 +427,9 @@ export class StudentService {
         };
       }
 
-      const data = await Promise.all(students.map(async (student) => await listForHrFilter(student)))
+      const data = await Promise.all(
+        students.map(async (student) => await listForHrFilter(student)),
+      );
 
       return {
         actionStatus: true,
@@ -416,26 +444,27 @@ export class StudentService {
     }
   }
 
-  async getLogedStudentData(user: UserEntity): Promise<StudentExtendedDataPatch | string> {
+  async getLogedStudentData(
+    user: UserEntity,
+  ): Promise<StudentExtendedDataPatch | string> {
     try {
       const student = await StudentEntity.findOne({
         where: {
-          user: user as FindOptionsWhere<UserEntity>
+          user: user as FindOptionsWhere<UserEntity>,
         },
         relations: {
-          user: true
-        }
+          user: true,
+        },
       });
 
       if (!student) return 'Błąd podczas wczytywania danych kursanta';
 
       const data = availabeForPatchStudentData(student);
 
-      return data
-
+      return data;
     } catch (err) {
-      console.log(err)
-      return 'Błąd serwera'
+      console.log(err);
+      return 'Błąd serwera';
     }
   }
 }

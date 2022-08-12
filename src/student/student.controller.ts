@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFiles,
   UseFilters,
   UseGuards,
@@ -14,7 +15,11 @@ import {
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { destionation } from 'src/multer/multer.storage';
-import { StudentsSelectedByHrResponse, UploadeFileMulter } from 'src/types';
+import {
+  StudentPagination,
+  StudentsSelectedByHrResponse,
+  UploadeFileMulter,
+} from 'src/types';
 import { FileTypeValidationPipe } from 'src/pipe/file-validation.pipe';
 import { AcceptableExceptionFilter } from 'src/filter/not-acceptable.filter';
 import { StudentService } from './student.service';
@@ -86,9 +91,9 @@ export class StudentController {
   @Get('/freelist')
   @UseRole('recruiter')
   @UseGuards(AuthGuard)
-  async getFreeStudents() {
+  async getFreeStudents(@Query() query: StudentPagination) {
     try {
-      const result = await this.studentService.getFreeStudnetList();
+      const result = await this.studentService.getFreeStudnetList(query);
       return {
         actionStatus: true,
         data: result,
@@ -101,15 +106,13 @@ export class StudentController {
       };
     }
   }
+
   @Get('/data')
   @UseRole('student')
   @UseGuards(AuthGuard)
-  async getStudentData(
-    @UserObject() user: UserEntity
-  ) {
-    return await this.studentService.getLogedStudentData(user)
+  async getStudentData(@UserObject() user: UserEntity) {
+    return await this.studentService.getLogedStudentData(user);
   }
-
 
   @Get('getone/:id')
   @UseRole('recruiter')
