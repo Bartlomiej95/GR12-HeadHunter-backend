@@ -170,6 +170,6 @@ W skład naszej grupy wchodzą:
 [Arek](https://github.com/arekmastalerczuk),
 [Andrzej](https://github.com/enrju),
 [Mariusz](https://github.com/MariuszRudnik),
-Mateusz,
+[Mateusz](https://github.com/mogiel),
 [Darek](https://github.com/darone90),
 [Jakub](https://github.com/swierczekjakub),
