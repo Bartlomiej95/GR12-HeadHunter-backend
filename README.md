@@ -169,7 +169,7 @@ W skład naszej grupy wchodzą:
 [Hubert](https://github.com/hugobosy),
 [Arek](https://github.com/arekmastalerczuk),
 [Andrzej](https://github.com/enrju),
-Mariusz,
+[Mariusz](https://github.com/MariuszRudnik),
 Mateusz,
 [Darek](https://github.com/darone90),
 [Jakub](https://github.com/swierczekjakub),
